@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "876995875922",
+    "project_id": "phone-shop-management-system",
+    "storage_bucket": "phone-shop-management-system.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:876995875922:android:23f92c3580404bb31bfb8b",
+        "android_client_info": {
+          "package_name": "com.example.phone_management_system_admin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJWUezyfC5QrRqYs9b6VYLSHrjgKZFSbw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

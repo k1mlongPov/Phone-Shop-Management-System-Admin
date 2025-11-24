@@ -1,6 +1,7 @@
 // features/inventory/data/accessory_repository.dart
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:phone_management_system_admin/core/services/api_service.dart';
 import 'package:phone_management_system_admin/features/inventory/domain/enums/accessory_sort_field.dart';
 import 'package:phone_management_system_admin/features/inventory/domain/models/accessory_model.dart';
@@ -104,6 +105,147 @@ class AccessoryRepository {
         ? Map<String, dynamic>.from(map['data'])
         : Map<String, dynamic>.from(res.data);
     return Accessory.fromJson(payload);
+  }
+
+  Future<Accessory> createAccessory({
+    required String name,
+    required String type,
+    String? brand,
+    required double purchasePrice,
+    required double sellingPrice,
+    required String currency,
+    required String categoryId,
+    required String supplierId,
+    Map<String, dynamic>? attributes,
+    List<String>? compatibility,
+    List<String>? imagePaths,
+    int stock = 0,
+    int lowStockThreshold = 10,
+  }) async {
+    final form = FormData();
+
+    // Basic fields
+    form.fields.addAll([
+      MapEntry("name", name),
+      MapEntry("type", type),
+      if (brand != null) MapEntry("brand", brand),
+      MapEntry("pricing[purchasePrice]", purchasePrice.toString()),
+      MapEntry("pricing[sellingPrice]", sellingPrice.toString()),
+      MapEntry("currency", currency),
+      MapEntry("stock", stock.toString()),
+      MapEntry("lowStockThreshold", lowStockThreshold.toString()),
+      MapEntry("category", categoryId),
+      MapEntry("supplier", supplierId),
+    ]);
+
+    // Attributes
+    if (attributes != null) {
+      attributes.forEach((key, value) {
+        if (value != null) {
+          form.fields.add(MapEntry("attributes[$key]", value.toString()));
+        }
+      });
+    }
+
+    // Compatibility
+    if (compatibility != null) {
+      for (int i = 0; i < compatibility.length; i++) {
+        form.fields.add(MapEntry("compatibility[$i]", compatibility[i]));
+      }
+    }
+
+    // Images
+    if (imagePaths != null) {
+      for (final path in imagePaths) {
+        form.files.add(
+          MapEntry(
+            "images",
+            await MultipartFile.fromFile(
+              path,
+              filename: path.split('/').last,
+            ),
+          ),
+        );
+      }
+    }
+
+    final response = await api.post("/api/accessories", form);
+
+    return Accessory.fromJson(response.data["data"]);
+  }
+
+  Future<Accessory> updateAccessory({
+    required String id,
+    required String name,
+    required String type,
+    String? brand,
+    required double purchasePrice,
+    required double sellingPrice,
+    required String currency,
+    required String categoryId,
+    required String supplierId,
+    Map<String, dynamic>? attributes,
+    List<String>? compatibility,
+    List<String>? imagePaths, // ONLY new images
+    int? stock,
+    int? lowStockThreshold,
+  }) async {
+    final form = FormData();
+
+    // BASIC FIELDS
+    form.fields.addAll([
+      MapEntry("name", name),
+      MapEntry("type", type),
+      if (brand != null) MapEntry("brand", brand),
+      MapEntry("pricing[purchasePrice]", purchasePrice.toString()),
+      MapEntry("pricing[sellingPrice]", sellingPrice.toString()),
+      MapEntry("currency", currency),
+      MapEntry("category", categoryId),
+      MapEntry("supplier", supplierId),
+    ]);
+
+    if (stock != null) {
+      form.fields.add(MapEntry("stock", stock.toString()));
+    }
+    if (lowStockThreshold != null) {
+      form.fields
+          .add(MapEntry("lowStockThreshold", lowStockThreshold.toString()));
+    }
+
+    // ATTRIBUTES
+    if (attributes != null) {
+      attributes.forEach((key, value) {
+        if (value != null) {
+          form.fields.add(MapEntry("attributes[$key]", value.toString()));
+        }
+      });
+    }
+
+    // COMPATIBILITY
+    if (compatibility != null) {
+      for (int i = 0; i < compatibility.length; i++) {
+        form.fields.add(MapEntry("compatibility[$i]", compatibility[i]));
+      }
+    }
+
+    // IMAGES (Only new uploads)
+    if (imagePaths != null) {
+      for (final path in imagePaths) {
+        form.files.add(
+          MapEntry(
+            "images",
+            await MultipartFile.fromFile(
+              path,
+              filename: path.split('/').last,
+            ),
+          ),
+        );
+      }
+    }
+
+    final response = await api.put("/api/accessories/$id", form);
+
+    return Accessory.fromJson(response.data["data"]);
   }
 
   // ----------------- DELETE -----------------

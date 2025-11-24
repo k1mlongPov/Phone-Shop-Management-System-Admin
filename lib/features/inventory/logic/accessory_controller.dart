@@ -1,7 +1,15 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:phone_management_system_admin/features/inventory/data/accessory_repository.dart';
 import 'package:phone_management_system_admin/features/inventory/domain/enums/accessory_sort_field.dart';
 import 'package:phone_management_system_admin/features/inventory/domain/models/accessory_model.dart';
+
+class AttributeField {
+  String key;
+  String value;
+  AttributeField({this.key = "", this.value = ""});
+}
 
 class AccessoryController extends GetxController {
   final AccessoryRepository repository;
@@ -27,6 +35,53 @@ class AccessoryController extends GetxController {
   final Rx<AccessorySortField> sortField = AccessorySortField.createdAt.obs;
   final RxString sortOrder = 'asc'.obs;
   final RxString sortBy = ''.obs;
+
+  final nameController = TextEditingController();
+  final typeController = TextEditingController();
+  final brandController = TextEditingController();
+
+  final purchasePriceController = TextEditingController();
+  final sellingPriceController = TextEditingController();
+
+  final currencyController = TextEditingController(text: "USD");
+
+  final categoryId = ''.obs; // MUST BE ID
+  final subcategoryId = ''.obs; // MUST BE ID
+  final supplierId = ''.obs; // MUST BE ID (REQUIRED)
+
+  final stockController = TextEditingController(text: "0");
+
+  final compatibilityController = TextEditingController();
+
+  // ======================
+  // ATTRIBUTES
+  // ======================
+  RxList<AttributeField> attributes = <AttributeField>[].obs;
+  void addAttribute() => attributes.add(AttributeField());
+  void removeAttribute(int i) => attributes.removeAt(i);
+
+  Map<String, dynamic> buildAttributes() {
+    final map = <String, dynamic>{};
+    for (var a in attributes) {
+      if (a.key.trim().isNotEmpty) {
+        map[a.key] = a.value;
+      }
+    }
+    return map;
+  }
+
+  // ======================
+  // IMAGES
+  // ======================
+  RxList<XFile> pickedImages = <XFile>[].obs;
+  final ImagePicker picker = ImagePicker();
+
+  Future pickImages() async {
+    final imgs = await picker.pickMultiImage();
+    if (imgs.isNotEmpty) pickedImages.addAll(imgs);
+  }
+
+  void removeImage(int i) => pickedImages.removeAt(i);
 
   @override
   void onInit() {
@@ -139,6 +194,97 @@ class AccessoryController extends GetxController {
     await fetchAccessories(reset: false);
   }
 
+  Future<bool> createAccessory({
+    required String name,
+    required String type,
+    String? brand,
+    required double purchasePrice,
+    required double sellingPrice,
+    required String currency,
+    required String categoryId,
+    required String supplierId,
+    Map<String, dynamic>? attributes,
+    List<String>? compatibility,
+    List<String>? imagePaths,
+    int stock = 0,
+    int lowStockThreshold = 10,
+  }) async {
+    try {
+      final created = await repository.createAccessory(
+        name: name,
+        type: type,
+        brand: brand,
+        purchasePrice: purchasePrice,
+        sellingPrice: sellingPrice,
+        currency: currency,
+        categoryId: categoryId,
+        supplierId: supplierId,
+        attributes: attributes,
+        compatibility: compatibility,
+        imagePaths: imagePaths,
+        stock: stock,
+        lowStockThreshold: lowStockThreshold,
+      );
+
+      accessories.insert(0, created);
+      return true;
+    } catch (e) {
+      Get.snackbar("Error", e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> updateAccessory(
+    String id, {
+    required String name,
+    required String type,
+    String? brand,
+    required double purchasePrice,
+    required double sellingPrice,
+    required String currency,
+    required String categoryId,
+    required String supplierId,
+    Map<String, dynamic>? attributes,
+    List<String>? compatibility,
+    List<String>? imagePaths, // new only
+    int? stock,
+    int? lowStockThreshold,
+  }) async {
+    try {
+      final updated = await repository.updateAccessory(
+        id: id,
+        name: name,
+        type: type,
+        brand: brand,
+        purchasePrice: purchasePrice,
+        sellingPrice: sellingPrice,
+        currency: currency,
+        categoryId: categoryId,
+        supplierId: supplierId,
+        attributes: attributes,
+        compatibility: compatibility,
+        imagePaths: imagePaths,
+        stock: stock,
+        lowStockThreshold: lowStockThreshold,
+      );
+
+      // replace local state
+      final index = accessories.indexWhere((a) => a.id == id);
+      if (index != -1) {
+        accessories[index] = updated;
+      }
+      return true;
+    } catch (e) {
+      Get.snackbar("Error", e.toString());
+      return false;
+    }
+  }
+
+  void updateLocal(Accessory updated) {
+    final idx = accessories.indexWhere((x) => x.id == updated.id);
+    if (idx != -1) accessories[idx] = updated;
+  }
+
   // ----------------- single item -----------------
   Future<Accessory?> fetchAccessoryById(String id) async {
     try {
@@ -165,7 +311,6 @@ class AccessoryController extends GetxController {
     try {
       await repository.deleteAccessory(id);
       accessories.removeWhere((a) => a.id == id);
-      Get.snackbar('Deleted', 'Accessory deleted');
     } catch (e) {
       Get.snackbar('Delete failed', e.toString());
     }

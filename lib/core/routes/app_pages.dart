@@ -6,11 +6,13 @@ import 'package:phone_management_system_admin/features/auth/logic/auth_binding.d
 import 'package:phone_management_system_admin/features/auth/presentation/pages/login_page.dart';
 import 'package:phone_management_system_admin/features/auth/presentation/pages/registration_page.dart';
 import 'package:phone_management_system_admin/features/auth/presentation/pages/splash_page.dart';
+import 'package:phone_management_system_admin/features/auth/presentation/pages/verification_page.dart';
 import 'package:phone_management_system_admin/features/customers/presentation/pages/customers_page.dart';
 import 'package:phone_management_system_admin/features/dashboard/logic/dashboard_binding.dart';
 import 'package:phone_management_system_admin/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:phone_management_system_admin/features/inventory/bindings/inventory_binding.dart';
 import 'package:phone_management_system_admin/features/inventory/presentation/pages/inventory_page.dart';
+import 'package:phone_management_system_admin/features/inventory/presentation/pages/phones_page.dart';
 import 'package:phone_management_system_admin/features/orders/presentation/pages/orders_page.dart';
 import 'package:phone_management_system_admin/features/settings/presentation/pages/settings_page.dart';
 
@@ -26,6 +28,11 @@ class AppPages {
     GetPage(
       name: Routes.REGISTER,
       page: () => const RegistrationPage(),
+      binding: AuthBinding(),
+    ),
+    GetPage(
+      name: Routes.VERIFY,
+      page: () => const VerificationPage(),
       binding: AuthBinding(),
     ),
     GetPage(
@@ -49,6 +56,10 @@ class AppPages {
       name: Routes.INVENTORY,
       page: () => const InventoryPage(),
       binding: InventoryBinding(),
+    ),
+    GetPage(
+      name: Routes.PHONE,
+      page: () => PhonesPage(),
     ),
     GetPage(
       name: Routes.ORDER,

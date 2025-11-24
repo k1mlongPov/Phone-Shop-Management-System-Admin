@@ -1,5 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:get/get.dart';
+import 'package:dio/dio.dart' as dio;
+
 import 'package:phone_management_system_admin/features/inventory/data/category_repository.dart';
 import 'package:phone_management_system_admin/features/inventory/domain/enums/category_sort_field.dart';
 import 'package:phone_management_system_admin/features/inventory/domain/models/category_model.dart';
@@ -276,19 +278,51 @@ class CategoryController extends GetxController {
   // -------------------------
   // Create / update / delete (unchanged)
   // -------------------------
-  Future<void> createCategory(Map<String, dynamic> payload) async {
+  Future<void> createCategoryWithImage({
+    required String name,
+    String? description,
+    String? parentId,
+    MultipartFile? imageFile,
+  }) async {
     try {
-      final created = await repository.create(payload);
+      final form = dio.FormData();
+      // Required
+      form.fields.add(MapEntry("name", name.trim()));
 
-      if (created.parentId == null) {
-        rootCategories.add(created);
-      } else {
-        subcategories.add(created);
+      // Optional
+      if (description != null && description.trim().isNotEmpty) {
+        form.fields.add(MapEntry("description", description.trim()));
       }
 
-      Get.snackbar('Success', 'Category created');
-    } catch (e) {
-      Get.snackbar('Create failed', e.toString());
+      if (parentId != null && parentId.isNotEmpty) {
+        form.fields.add(MapEntry("parent", parentId));
+      }
+
+      if (imageFile != null) {
+        form.files.add(MapEntry("image", imageFile as dio.MultipartFile));
+      }
+
+      final created = await repository.createCategory(form);
+
+      // Add into correct list
+      if (parentId == null || parentId.isEmpty) {
+        // Root category
+        rootCategories.insert(0, created);
+      } else {
+        // Subcategory
+        subcategories.insert(0, created);
+
+        // Also update SubCategoryController cache if used
+        try {
+          final subCtrl = Get.find<SubCategoryController>();
+          await subCtrl.refetchSubcategories(parentId);
+        } catch (_) {}
+      }
+
+      Get.snackbar("Created", "Category created successfully");
+    } catch (e, st) {
+      print('createCategoryWithImage ERROR: $e\n$st');
+      Get.snackbar("Error", e.toString());
     }
   }
 

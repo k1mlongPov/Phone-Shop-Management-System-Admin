@@ -1,13 +1,15 @@
-import 'package:cross_file/src/types/interface.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:phone_management_system_admin/core/services/local_storage_service.dart';
 import 'package:phone_management_system_admin/features/inventory/data/phone_repository.dart';
 import 'package:phone_management_system_admin/features/inventory/domain/enums/phone_sort_field.dart';
 import 'package:phone_management_system_admin/features/inventory/domain/models/phone_model.dart';
 
 class PhoneController extends GetxController {
   final PhoneRepository repository;
+  final LocalStorageService storage;
 
-  PhoneController({required this.repository});
+  PhoneController({required this.repository, required this.storage});
 
   // State
   final RxList<Phone> phones = <Phone>[].obs;
@@ -29,8 +31,6 @@ class PhoneController extends GetxController {
   final RxString selectedCategoryId = ''.obs;
 
   String get activeSortKey => sortBy.value;
-
-  // debounce for search
   final Duration searchDebounce = const Duration(milliseconds: 450);
 
   @override
@@ -130,8 +130,6 @@ class PhoneController extends GetxController {
     await fetchPhones(reset: true);
   }
 
-  /// Fetch phones from repository.
-  /// If [reset] is true, the controller will clear previous items and re-start from page 1.
   Future<void> fetchPhones({bool reset = false}) async {
     if (reset) {
       page.value = 1;
@@ -267,17 +265,54 @@ class PhoneController extends GetxController {
         supplierId: input['supplier'],
         specs: input['specs'],
         variants: input['variants'],
-        imagePaths: input['images'],
+        imagePaths: pickedImages.isEmpty
+            ? null
+            : pickedImages.map((f) => f.path).toList(),
       );
 
       phones.insert(0, phone);
-      Get.snackbar("Success", "Phone created");
 
       return true;
     } catch (e) {
-      Get.snackbar("Error", e.toString());
       return false;
     }
+  }
+
+  Future<bool> updatePhone(
+    String id,
+    Map<String, dynamic> input,
+    List<XFile> pickedImages,
+  ) async {
+    try {
+      final updated = await repository.updatePhone(
+        id: id,
+        brand: input['brand'],
+        model: input['model'],
+        purchasePrice: input['purchasePrice'],
+        sellingPrice: input['sellingPrice'],
+        currency: input['currency'],
+        categoryId: input['category'],
+        supplierId: input['supplier'],
+        specs: input['specs'],
+        variants: input['variants'],
+        imagePaths: pickedImages.isEmpty
+            ? null
+            : pickedImages.map((f) => f.path).toList(),
+      );
+
+      // Update local list
+      final index = phones.indexWhere((p) => p.id == id);
+      if (index != -1) phones[index] = updated;
+
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  void updateLocal(Phone updated) {
+    final idx = phones.indexWhere((x) => x.id == updated.id);
+    if (idx != -1) phones[idx] = updated;
   }
 
   Future<void> deletePhone(String id) async {

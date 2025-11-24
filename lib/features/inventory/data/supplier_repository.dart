@@ -22,18 +22,15 @@ class SupplierRepository {
     return [];
   }
 
-  Future<SupplierModel> createSupplier(Map<String, dynamic> payload) async {
+  Future<SupplierModel> create(Map<String, dynamic> payload) async {
     final res = await api.post('/api/suppliers', payload);
+    final data = res.data;
 
-    final body = res.data;
-
-    if (body is Map && body['data'] is Map) {
-      return SupplierModel.fromJson(
-        Map<String, dynamic>.from(body['data']),
-      );
+    if (data == null || data['data'] == null) {
+      throw Exception("Invalid response from server");
     }
 
-    throw Exception("Invalid create supplier response");
+    return SupplierModel.fromJson(data['data']);
   }
 
   Future<SupplierModel> updateSupplier(

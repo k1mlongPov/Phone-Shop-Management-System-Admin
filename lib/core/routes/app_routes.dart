@@ -8,6 +8,7 @@ abstract class Routes {
   static const APPSHELL = '/app';
   static const DASHBOARD = '/dashboard';
   static const INVENTORY = '/inventory';
+  static const PHONE = '/phone';
   static const CUSTOMER = '/customer';
   static const ORDER = '/order';
   static const SETTING = '/setting';

@@ -6,7 +6,7 @@ import 'package:phone_management_system_admin/features/auth/data/auth_repository
 import 'package:phone_management_system_admin/features/auth/domain/models/user_model.dart';
 
 class AuthController extends GetxController {
-  AuthController({required this.repository});
+  AuthController({required this.storage, required this.repository});
 
   // --- Reactive States ---
   final RxBool isLoading = false.obs;
@@ -17,6 +17,7 @@ class AuthController extends GetxController {
   final token = RxnString();
 
   final AuthRepository repository;
+  final LocalStorageService storage;
 
   // --- Text Controllers ---
   final username = TextEditingController();
@@ -25,10 +26,6 @@ class AuthController extends GetxController {
   final confirmPassword = TextEditingController();
   final otp = TextEditingController();
   final phone = TextEditingController();
-
-  // -------------------------------------------------------------
-  //                      HELPERS
-  // -------------------------------------------------------------
 
   void togglePasswordVisibility() {
     obscurePassword.value = !obscurePassword.value;
@@ -74,40 +71,35 @@ class AuthController extends GetxController {
   Future<void> login() async {
     if (isLoading.value) return;
     isLoading.value = true;
+
     try {
       final result = await repository.login(
         email: email.text.trim(),
         password: password.text,
       );
 
+      // Only read tokens — DO NOT SAVE THEM HERE
       final loggedUser = result['user'] as UserModel;
-      final loggedToken = result['token'] as String;
+      final accessToken = result['accessToken'] as String;
 
       user.value = loggedUser;
-      token.value = loggedToken;
-
-      // repository.login already persists/attaches token in your repo implementation.
-      // If repository.login didn't, call repository.attachToken(loggedToken);
+      token.value = accessToken;
 
       clearLoginFields();
-
       Get.offAllNamed(Routes.APPSHELL);
     } catch (e) {
-      // You may want to present friendly snackbars here
       final msg = e.toString().replaceAll('Exception: ', '');
       Get.snackbar('Login failed', msg, snackPosition: SnackPosition.BOTTOM);
+      print(msg);
     } finally {
       isLoading.value = false;
     }
   }
 
-  // -------------------------------------------------------------
-  //                   REGISTER (Email)
-  // -------------------------------------------------------------
-
   Future<void> register() async {
     if (isLoading.value) return;
     isLoading.value = true;
+
     try {
       final userMap = await repository.register(
         username: username.text.trim(),
@@ -115,13 +107,16 @@ class AuthController extends GetxController {
         password: password.text,
       );
 
-      // If repository returns created user object
-      if (userMap.isNotEmpty) {
-        user.value = UserModel.fromJson(userMap);
-      }
+      user.value = UserModel.fromJson(userMap);
 
-      // After register you probably navigate to verification screen
-      clearRegisterFields();
+      final emailCopy = email.text.trim();
+
+      password.clear();
+
+      Get.toNamed(
+        Routes.VERIFY,
+        arguments: {"email": emailCopy},
+      );
     } catch (e) {
       final msg = e.toString().replaceAll('Exception: ', '');
       Get.snackbar('Register failed', msg, snackPosition: SnackPosition.BOTTOM);
@@ -129,10 +124,6 @@ class AuthController extends GetxController {
       isLoading.value = false;
     }
   }
-
-  // -------------------------------------------------------------
-  //                     VERIFY EMAIL OTP
-  // -------------------------------------------------------------
 
   Future<void> verifyEmailOtp() async {
     try {
@@ -154,10 +145,6 @@ class AuthController extends GetxController {
     }
   }
 
-  // -------------------------------------------------------------
-  //                       GET CURRENT USER
-  // -------------------------------------------------------------
-
   Future<void> fetchCurrentUser() async {
     try {
       isLoading.value = true;
@@ -171,10 +158,6 @@ class AuthController extends GetxController {
       isLoading.value = false;
     }
   }
-
-  // -------------------------------------------------------------
-  //                     BOOTSTRAP ON APP START
-  // -------------------------------------------------------------
 
   Future<void> bootstrap() async {
     final savedToken = await LocalStorageService().getAuthTokenAsync();
@@ -195,30 +178,6 @@ class AuthController extends GetxController {
     }
   }
 
-  // -------------------------------------------------------------
-  //                    PHONE VERIFY (Optional)
-  // -------------------------------------------------------------
-
-  // Future<void> verifyPhoneOtp() async {
-  //   try {
-  //     isLoading.value = true;
-
-  //     final updated = await repository.verifyPhoneOtp(phone.text.trim());
-  //     user.value = updated;
-
-  //     Get.snackbar("Success", "Phone verified");
-  //     phone.clear();
-  //   } catch (e) {
-  //     await _handleError(e, "Phone verify failed");
-  //   } finally {
-  //     isLoading.value = false;
-  //   }
-  // }
-
-  // -------------------------------------------------------------
-  //                        LOGOUT
-  // -------------------------------------------------------------
-
   Future<void> logout() async {
     await repository.logout();
 
@@ -227,10 +186,6 @@ class AuthController extends GetxController {
 
     Get.offAllNamed('/login');
   }
-
-  // -------------------------------------------------------------
-  //                    DISPOSE CONTROLLERS
-  // -------------------------------------------------------------
 
   @override
   void onClose() {

@@ -17,7 +17,8 @@ class AuthBinding extends Bindings {
         () => AuthRepository(api: api, storage: storage));
 
 // AuthController depends on AuthRepository
-    Get.lazyPut<AuthController>(() => AuthController(repository: Get.find()));
+    Get.lazyPut<AuthController>(
+        () => AuthController(repository: Get.find(), storage: storage));
 
     Get.lazyPut<SwitchController>(() => SwitchController());
   }

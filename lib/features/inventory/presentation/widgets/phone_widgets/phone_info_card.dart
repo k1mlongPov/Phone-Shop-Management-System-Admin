@@ -21,201 +21,132 @@ Widget buildPhoneInfoCard(
 ) {
   final images = p.images ?? <String>[];
 
-  return SingleChildScrollView(
-    padding: EdgeInsets.all(12.r),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (images.isEmpty)
-          Container(
-            height: 260.h,
-            color: Colors.grey.shade100,
-            child: Center(
-                child:
-                    Icon(Icons.phone_android, size: 70.r, color: Colors.grey)),
-          )
-        else
-          Column(
-            children: [
-              ImageCarousel(
-                images: p.images,
-                pageController: pageController,
-                activeIndex: activeImageIndex,
-                onTap: (idx, url) {},
-                height: 260, // pixel value interpreted by ScreenUtil (height.h)
-              ),
-              SizedBox(height: 8.h),
-            ],
-          ),
-
-        SizedBox(height: 18.h),
-
-        // Info card
-        ReusableText(
-          text: 'Details',
-          style: appStyle(16, AppColors.kDark, FontWeight.bold),
-        ),
-        SizedBox(height: 8.h),
-        Container(
-          width: AppSize.width,
-          decoration: BoxDecoration(
-            color: AppColors.kWhite,
-            boxShadow: const [
-              BoxShadow(
-                color: Color.fromRGBO(0, 0, 0, 0.09),
-                blurRadius: 12,
-                spreadRadius: 0,
-                offset: Offset(0, 3),
-              ),
-            ],
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(12.r),
-            child: Column(
+  return SafeArea(
+    child: SingleChildScrollView(
+      padding: EdgeInsets.all(12.r),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (images.isEmpty)
+            Container(
+              height: 260.h,
+              color: Colors.grey.shade100,
+              child: Center(
+                  child: Icon(Icons.phone_android,
+                      size: 70.r, color: Colors.grey)),
+            )
+          else
+            Column(
               children: [
-                rowText('Brand', p.brand),
-                rowText('Model', p.model),
-                rowText(
-                    'Selling', '${p.pricing.sellingPrice} ${p.currency ?? ''}'),
-                rowText('Purchase',
-                    '${p.pricing.purchasePrice} ${p.currency ?? ''}'),
-                rowText('Stock', p.totalStock.toString()),
-                rowText('SKU', p.sku ?? '-'),
-                Obx(
-                  () {
-                    final cid = catCtrl.getCategoryNameIncludingSub(p.category);
-                    final name = cid == null
-                        ? '-'
-                        : (catCtrl.getCategoryNameIncludingSub(cid) ?? cid);
-                    return rowText('Category', name);
-                  },
+                ImageCarousel(
+                  images: p.images,
+                  pageController: pageController,
+                  activeIndex: activeImageIndex,
+                  onTap: (idx, url) {},
+                  height:
+                      260, // pixel value interpreted by ScreenUtil (height.h)
                 ),
+                SizedBox(height: 8.h),
               ],
             ),
-          ),
-        ),
 
-        SizedBox(height: 12.h),
-        ReusableText(
-          text: 'Specs',
-          style: appStyle(16, AppColors.kDark, FontWeight.bold),
-        ),
-        SizedBox(height: 8.h),
-        Container(
-          width: AppSize.width,
-          decoration: BoxDecoration(
-            color: AppColors.kWhite,
-            boxShadow: const [
-              BoxShadow(
-                color: Color.fromRGBO(0, 0, 0, 0.09),
-                blurRadius: 12,
-                spreadRadius: 0,
-                offset: Offset(0, 3),
-              ),
-            ],
-            borderRadius: BorderRadius.circular(12.r),
+          SizedBox(height: 18.h),
+
+          // Info card
+          ReusableText(
+            text: 'Details',
+            style: appStyle(16, AppColors.kDark, FontWeight.bold),
           ),
-          child: Padding(
-            padding: EdgeInsets.all(12.r),
-            child: p.specs == null
-                ? Text('No specs', style: TextStyle(fontSize: 13.sp))
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (p.specs!.chipset != null)
-                        rowText('Chipset', p.specs!.chipset!),
-                      if (p.specs!.ram != null)
-                        rowText('RAM', '${p.specs!.ram} GB'),
-                      if (p.specs!.storage != null)
-                        rowText('Storage', '${p.specs!.storage} GB'),
-                    ],
+          SizedBox(height: 8.h),
+          SizedBox(
+            width: AppSize.width,
+            child: Padding(
+              padding: EdgeInsets.all(12.r),
+              child: Column(
+                children: [
+                  rowText('Brand', p.brand),
+                  rowText('Model', p.model),
+                  rowText('Selling',
+                      '${p.pricing.sellingPrice} ${p.currency ?? ''}'),
+                  rowText('Purchase',
+                      '${p.pricing.purchasePrice} ${p.currency ?? ''}'),
+                  rowText('Stock', p.totalStock.toString()),
+                  rowText('SKU', p.sku ?? '-'),
+                  Obx(
+                    () {
+                      final cid =
+                          catCtrl.getCategoryNameIncludingSub(p.category);
+                      final name = cid == null
+                          ? '-'
+                          : (catCtrl.getCategoryNameIncludingSub(cid) ?? cid);
+                      return rowText('Category', name);
+                    },
                   ),
-          ),
-        ),
-
-        SizedBox(height: 12.h),
-        ReusableText(
-          text: 'Variants',
-          style: appStyle(16, AppColors.kDark, FontWeight.bold),
-        ),
-        SizedBox(height: 8.h),
-        Container(
-          width: AppSize.width,
-          decoration: BoxDecoration(
-            color: AppColors.kWhite,
-            boxShadow: const [
-              BoxShadow(
-                color: Color.fromRGBO(0, 0, 0, 0.09),
-                blurRadius: 12,
-                spreadRadius: 0,
-                offset: Offset(0, 3),
-              ),
-            ],
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          child: Column(
-            children: (p.variants ?? []).map((v) {
-              return ListTile(
-                title: ReusableText(
-                  text:
-                      '${v.storage ?? ''} GB • Color: ${v.color ?? ''}'.trim(),
-                  style: appStyle(14, AppColors.kDark, FontWeight.w500),
-                ),
-                subtitle: ReusableText(
-                  text:
-                      'Stock: ${v.stock ?? 0} • Price: ${v.pricing?.sellingPrice ?? '-'}',
-                  style: appStyle(12, AppColors.kPrimary, FontWeight.w400),
-                ),
-                trailing: IconButton(
-                    icon: const Icon(Icons.edit),
-                    onPressed: () {
-                      Get.toNamed('/phones/variant/edit',
-                          arguments: {'phoneId': p.id, 'variant': v});
-                    }),
-              );
-            }).toList(),
-          ),
-        ),
-
-        SizedBox(height: 20.h),
-        Row(
-          children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                style: const ButtonStyle(
-                  backgroundColor: WidgetStatePropertyAll(AppColors.kPrimary),
-                ),
-                icon: Icon(
-                  Icons.edit,
-                  color: AppColors.kWhite,
-                  size: 22.r,
-                ),
-                label: ReusableText(
-                  text: 'Edit',
-                  style: appStyle(12, AppColors.kWhite, FontWeight.w400),
-                ),
-                onPressed: () => _onEdit(p),
+                ],
               ),
             ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.delete, color: AppColors.kRed),
-                label: ReusableText(
-                  text: 'Delete',
-                  style: appStyle(12, AppColors.kRed, FontWeight.w400),
-                ),
-                onPressed: () => _onDelete(p, phoneCtrl),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.kRed),
-                ),
-              ),
+          ),
+
+          SizedBox(height: 12.h),
+          ReusableText(
+            text: 'Specs',
+            style: appStyle(16, AppColors.kDark, FontWeight.bold),
+          ),
+          SizedBox(height: 8.h),
+          SizedBox(
+            width: AppSize.width,
+            child: Padding(
+              padding: EdgeInsets.all(12.r),
+              child: p.specs == null
+                  ? Text('No specs', style: TextStyle(fontSize: 13.sp))
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (p.specs!.chipset != null)
+                          rowText('Chipset', p.specs!.chipset!),
+                        if (p.specs!.ram != null)
+                          rowText('RAM', '${p.specs!.ram} GB'),
+                        if (p.specs!.storage != null)
+                          rowText('Storage', '${p.specs!.storage} GB'),
+                      ],
+                    ),
             ),
-          ],
-        ),
-        SizedBox(height: 20.h),
-      ],
+          ),
+
+          SizedBox(height: 12.h),
+          ReusableText(
+            text: 'Variants',
+            style: appStyle(16, AppColors.kDark, FontWeight.bold),
+          ),
+          SizedBox(height: 8.h),
+          SizedBox(
+            width: AppSize.width,
+            child: Column(
+              children: (p.variants ?? []).map((v) {
+                return ListTile(
+                  title: ReusableText(
+                    text: '${v.storage ?? ''} GB • Color: ${v.color ?? ''}'
+                        .trim(),
+                    style: appStyle(14, AppColors.kDark, FontWeight.w500),
+                  ),
+                  subtitle: ReusableText(
+                    text:
+                        'Stock: ${v.stock ?? 0} • Price: ${v.pricing?.sellingPrice ?? '-'}',
+                    style: appStyle(12, AppColors.kPrimary, FontWeight.w400),
+                  ),
+                  trailing: IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () {
+                        Get.toNamed('/phones/variant/edit',
+                            arguments: {'phoneId': p.id, 'variant': v});
+                      }),
+                );
+              }).toList(),
+            ),
+          ),
+          SizedBox(height: 20.h),
+        ],
+      ),
     ),
   );
 }

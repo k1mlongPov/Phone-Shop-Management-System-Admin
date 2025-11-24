@@ -7,12 +7,11 @@ import 'package:phone_management_system_admin/features/inventory/domain/models/p
 import 'package:phone_management_system_admin/features/inventory/logic/category_controller.dart';
 import 'package:phone_management_system_admin/features/inventory/logic/phone_controller.dart';
 import 'package:phone_management_system_admin/features/inventory/logic/subcategory_controller.dart';
-import 'package:phone_management_system_admin/features/inventory/presentation/pages/create_phone_bottom_sheet.dart';
+import 'package:phone_management_system_admin/features/inventory/presentation/pages/phone_form_bottom_sheet.dart';
 import 'package:phone_management_system_admin/features/inventory/presentation/widgets/category_filter_widget.dart';
 import 'package:phone_management_system_admin/features/inventory/presentation/widgets/phone_widgets/phone_tile.dart';
 import 'package:phone_management_system_admin/features/inventory/presentation/widgets/product_shimmer.dart';
 import 'package:phone_management_system_admin/features/inventory/presentation/widgets/search_and_filter_widget.dart';
-import 'package:phone_management_system_admin/shared/constants/app_size.dart';
 import 'package:phone_management_system_admin/shared/styles/app_style.dart';
 import 'package:phone_management_system_admin/shared/widgets/reusable_text.dart';
 
@@ -31,7 +30,7 @@ class PhonesPage extends StatelessWidget {
     PhoneSortField.stock: 'Stock',
   };
 
-  void openCreatePhoneSheet(BuildContext context) {
+  void openPhoneFormSheet(BuildContext context, {Phone? phone}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -39,7 +38,12 @@ class PhonesPage extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (_) => const CreatePhoneBottomSheet(),
+      builder: (_) => PhoneFormBottomSheet(phone: phone),
+      sheetAnimationStyle: AnimationStyle(
+        duration: const Duration(milliseconds: 1500),
+        reverseDuration: const Duration(milliseconds: 800),
+        curve: Curves.easeOutBack,
+      ),
     );
   }
 
@@ -53,8 +57,8 @@ class PhonesPage extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.all(12.r),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Search + Sort widget (generic)
           SearchAndFilter<PhoneSortField>(
             sortOptions: sortOptions,
             selectedSortField: phoneCtrl.sortField, // Rx<PhoneSortField>
@@ -76,14 +80,29 @@ class PhonesPage extends StatelessWidget {
           SizedBox(height: 12.h),
 
           GestureDetector(
-            onTap: () => openCreatePhoneSheet(context),
+            onTap: () => openPhoneFormSheet(context),
             child: Container(
-              margin: EdgeInsets.only(right: 10.w),
-              width: AppSize.width,
-              child: ReusableText(
-                text: 'Add new Phone',
-                style: appStyle(14, AppColors.kSecondary, FontWeight.normal),
-                textAlign: TextAlign.end,
+              margin: EdgeInsets.only(left: 6.w, top: 10.h),
+              height: 45.h,
+              decoration: BoxDecoration(
+                border: Border.all(width: .6, color: AppColors.kPrimary),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.add_circle_outline,
+                    color: AppColors.kPrimary,
+                  ),
+                  SizedBox(
+                    width: 8.w,
+                  ),
+                  ReusableText(
+                    text: 'Add new Phone',
+                    style: appStyle(14, AppColors.kPrimary, FontWeight.normal),
+                  ),
+                ],
               ),
             ),
           ),

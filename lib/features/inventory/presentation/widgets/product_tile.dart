@@ -62,9 +62,14 @@ class ProductTile extends StatelessWidget {
         ),
         trailing: GestureDetector(
           onTap: onTap,
-          child: Icon(
-            Icons.arrow_forward_ios,
-            size: 16.r,
+          child: Container(
+            width: 50.w,
+            height: 50.h,
+            alignment: Alignment.centerRight,
+            child: Icon(
+              Icons.arrow_forward_ios,
+              size: 16.r,
+            ),
           ),
         ),
       ),

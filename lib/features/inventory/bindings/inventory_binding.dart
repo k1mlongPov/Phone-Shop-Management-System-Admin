@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:phone_management_system_admin/core/services/api_service.dart';
+import 'package:phone_management_system_admin/core/services/local_storage_service.dart';
 import 'package:phone_management_system_admin/features/inventory/data/accessory_repository.dart';
 import 'package:phone_management_system_admin/features/inventory/data/category_repository.dart';
 import 'package:phone_management_system_admin/features/inventory/data/phone_repository.dart';
@@ -15,9 +16,12 @@ class InventoryBinding extends Bindings {
   void dependencies() {
     // Shared ApiService (created in InitialBinding)
     final ApiService api = Get.find<ApiService>();
+    final LocalStorageService storage = Get.find<LocalStorageService>();
 
     // Repositories (use fenix so they can be recreated)
-    Get.lazyPut<PhoneRepository>(() => PhoneRepository(api: api), fenix: true);
+    Get.lazyPut<PhoneRepository>(
+        () => PhoneRepository(api: api, storage: storage),
+        fenix: true);
     Get.lazyPut<AccessoryRepository>(() => AccessoryRepository(api: api),
         fenix: true);
     Get.lazyPut<CategoryRepository>(() => CategoryRepository(api: api),
@@ -27,7 +31,10 @@ class InventoryBinding extends Bindings {
 
     // Controllers (each uses its repository)
     Get.lazyPut<PhoneController>(
-        () => PhoneController(repository: Get.find<PhoneRepository>()),
+        () => PhoneController(
+              repository: Get.find<PhoneRepository>(),
+              storage: storage,
+            ),
         fenix: true);
     Get.lazyPut<AccessoryController>(
         () => AccessoryController(repository: Get.find<AccessoryRepository>()),

@@ -7,7 +7,8 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authController = Get.put(AuthController(repository: Get.find()));
+    final authController =
+        Get.put(AuthController(repository: Get.find(), storage: Get.find()));
     return Scaffold(
       body: Center(
         child: GestureDetector(

@@ -2,12 +2,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:phone_management_system_admin/core/routes/app_routes.dart';
 import 'package:phone_management_system_admin/core/theme/app_colors.dart';
 import 'package:phone_management_system_admin/features/inventory/domain/models/accessory_model.dart';
 import 'package:phone_management_system_admin/features/inventory/logic/accessory_controller.dart';
 import 'package:phone_management_system_admin/features/inventory/logic/category_controller.dart';
+import 'package:phone_management_system_admin/features/inventory/presentation/pages/accessory_form_bottom_sheet.dart';
 import 'package:phone_management_system_admin/features/inventory/presentation/widgets/accessory_widgets/accessory_info_card.dart';
 import 'package:phone_management_system_admin/shared/styles/app_style.dart';
+import 'package:phone_management_system_admin/shared/widgets/app_snackbar.dart';
+import 'package:phone_management_system_admin/shared/widgets/confirm_dialog.dart';
 import 'package:phone_management_system_admin/shared/widgets/reusable_text.dart';
 
 class AccessoryDetailPage extends StatelessWidget {
@@ -15,6 +19,26 @@ class AccessoryDetailPage extends StatelessWidget {
   final Accessory? accessory;
 
   const AccessoryDetailPage({super.key, this.accessoryId, this.accessory});
+
+  Future<dynamic> openCreateAccessorySheet(
+    BuildContext context, {
+    Accessory? accessory,
+  }) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => AccessoryFormBottomSheet(accessory: accessory),
+      sheetAnimationStyle: AnimationStyle(
+        duration: const Duration(milliseconds: 1500),
+        reverseDuration: const Duration(milliseconds: 800),
+        curve: Curves.easeOutBack,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,31 +87,88 @@ class AccessoryDetailPage extends StatelessWidget {
         final String? candidateId = accessoryId ?? (arg is String ? arg : null);
 
         // If accessory missing and we have an id, show retry / FutureBuilder approach
-        return Scaffold(
-          appBar: AppBar(
-            backgroundColor: AppColors.kPrimary,
-            leading: GestureDetector(
-              onTap: () => Get.back(),
-              child:
-                  Icon(Icons.arrow_back, color: AppColors.kWhite, size: 22.r),
+        return SafeArea(
+          child: Scaffold(
+            appBar: AppBar(
+              backgroundColor: AppColors.kPrimary,
+              leading: GestureDetector(
+                onTap: () => Get.back(),
+                child:
+                    Icon(Icons.arrow_back, color: AppColors.kWhite, size: 22.r),
+              ),
+              title: ReusableText(
+                text: a != null ? (a.name) : 'Accessory detail',
+                style: appStyle(16, AppColors.kWhite, FontWeight.w600),
+              ),
+              actions: [
+                // EDIT
+                GestureDetector(
+                  onTap: () async {
+                    final updated =
+                        await openCreateAccessorySheet(context, accessory: a);
+
+                    if (updated is Accessory) {
+                      accessoryCtrl.updateLocal(updated);
+                    }
+                  },
+                  child: SizedBox(
+                    width: 35.w,
+                    height: 35.h,
+                    child:
+                        Icon(Icons.edit, size: 22.r, color: AppColors.kWhite),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+
+                // DELETE
+                GestureDetector(
+                  onTap: () async {
+                    final yes = await showConfirmDialog(
+                      title: "Delete Phone",
+                      message:
+                          "Are you sure you want to delete this phone? This action cannot be undone.",
+                      confirmText: "Delete",
+                      confirmColor: Colors.red,
+                    );
+
+                    if (yes) {
+                      AppSnackbar.success(
+                        title: 'Success',
+                        message: 'Deleted phone successfully',
+                      );
+                      accessoryCtrl.deleteAccessory(a!.id!).then(
+                        (_) {
+                          Get.offAllNamed(
+                            Routes.APPSHELL,
+                            arguments: {'tab': 1},
+                          );
+                        },
+                      );
+                    }
+                  },
+                  child: SizedBox(
+                    width: 35.w,
+                    height: 35.h,
+                    child:
+                        Icon(Icons.delete, size: 22.r, color: AppColors.kRed),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+              ],
             ),
-            title: ReusableText(
-              text: a != null ? (a.name) : 'Accessory detail',
-              style: appStyle(16, AppColors.kWhite, FontWeight.w600),
-            ),
+            body: (isLoading && a == null)
+                ? const Center(child: CircularProgressIndicator())
+                : (a != null
+                    ? buildAccessoryInfoCard(
+                        context,
+                        a,
+                        pageController,
+                        activeImageIndex,
+                        accessoryCtrl,
+                        catCtrl,
+                      )
+                    : _buildMissing(context, candidateId, accessoryCtrl)),
           ),
-          body: (isLoading && a == null)
-              ? const Center(child: CircularProgressIndicator())
-              : (a != null
-                  ? buildAccessoryInfoCard(
-                      context,
-                      a,
-                      pageController,
-                      activeImageIndex,
-                      accessoryCtrl,
-                      catCtrl,
-                    )
-                  : _buildMissing(context, candidateId, accessoryCtrl)),
         );
       },
     );

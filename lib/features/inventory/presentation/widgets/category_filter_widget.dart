@@ -21,7 +21,6 @@ class CategoryFilter extends StatelessWidget {
   /// Function to call when user picks a category (pass null to clear).
   final SetCategoryFn onSetCategory;
 
-  /// Optionally provide controllers (otherwise Get.find is used).
   final CategoryController? categoryController;
   final SubCategoryController? subCategoryController;
 

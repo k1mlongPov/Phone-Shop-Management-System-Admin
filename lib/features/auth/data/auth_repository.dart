@@ -9,17 +9,6 @@ class AuthRepository {
 
   AuthRepository({required this.api, required this.storage});
 
-  // Extract token safely
-  String? _extractToken(dynamic body) {
-    if (body is Map) {
-      return body['token'] ??
-          body['accessToken'] ??
-          body['userToken'] ??
-          (body['data'] is Map ? body['data']['token'] : null);
-    }
-    return null;
-  }
-
   // Extract user safely
   Map<String, dynamic>? _extractUser(dynamic body) {
     if (body is Map) {
@@ -34,14 +23,9 @@ class AuthRepository {
     return null;
   }
 
-  // Persist token only — ApiService will attach header automatically
-  Future<void> _saveToken(String token) async {
-    await storage.setAuthToken(token);
-  }
-
   // Remove token
   Future<void> _clearToken() async {
-    await storage.clearAuthToken();
+    await storage.clearAll();
   }
 
   // ---------------- REGISTER ----------------
@@ -64,8 +48,12 @@ class AuthRepository {
         throw Exception(res.data['message'] ?? "Register failed");
       }
 
-      final user = _extractUser(res.data);
-      return user ?? {};
+      final body = res.data;
+      if (body == null || body['user'] == null) {
+        throw Exception("Invalid registration response");
+      }
+
+      return body['user'];
     } on DioException catch (e) {
       throw Exception(e.response?.data['message'] ?? "Register failed");
     }
@@ -87,26 +75,30 @@ class AuthRepository {
       }
 
       final body = res.data;
-      final token = _extractToken(body);
-      final userMap = _extractUser(body);
 
-      if (token == null || userMap == null) {
+      final access = body['accessToken'];
+      final refresh = body['refreshToken'];
+      final userMap = body['user'];
+
+      await storage.saveAuthToken(access);
+      await storage.saveRefreshToken(refresh);
+
+      if (access == null || refresh == null) {
         throw Exception("Invalid login response");
       }
 
-      // Must be admin (backend already enforces it, we double-check)
       final roles =
           (userMap['roles'] as List?)?.map((e) => e.toString()).toList() ?? [];
+
       if (!roles.map((e) => e.toLowerCase()).contains("admin")) {
         throw Exception(
             "You do not have permission to access the admin panel.");
       }
 
-      await _saveToken(token);
-
       return {
         'user': UserModel.fromJson(userMap),
-        'token': token,
+        'accessToken': access,
+        'refreshToken': refresh,
       };
     } on DioException catch (e) {
       throw Exception(e.response?.data['message'] ?? "Login failed");

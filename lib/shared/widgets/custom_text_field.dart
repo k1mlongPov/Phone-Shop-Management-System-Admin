@@ -20,6 +20,7 @@ class CustomTextField extends StatelessWidget {
     this.prefixIcon,
     this.validator,
     this.onChanged,
+    this.onTap,
     this.textInputAction,
     this.maxLines = 1,
     this.readOnly = false,
@@ -40,6 +41,7 @@ class CustomTextField extends StatelessWidget {
   final Widget? prefixIcon;
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
+  final void Function()? onTap;
   final TextInputAction? textInputAction;
   final int maxLines;
   final bool readOnly;
@@ -58,9 +60,10 @@ class CustomTextField extends StatelessWidget {
       textInputAction: textInputAction,
       maxLines: maxLines,
       readOnly: readOnly,
+      onTap: onTap,
       autovalidateMode: autovalidateMode,
       inputFormatters: inputFormatters,
-      style: appStyle(14, AppColors.kDark, FontWeight.normal),
+      style: appStyle(12, AppColors.kDark, FontWeight.normal),
       validator: validator,
       cursorHeight: 16.h,
       cursorColor: AppColors.kPrimary,
@@ -103,7 +106,6 @@ class CustomTextField extends StatelessWidget {
   }
 }
 
-/// Live validation wrapper that shows the error inside the decoration and also as a separate text below.
 class CustomTextFieldWithError extends StatefulWidget {
   const CustomTextFieldWithError({
     super.key,
@@ -114,6 +116,7 @@ class CustomTextFieldWithError extends StatefulWidget {
     this.validator,
     this.onEditingComplete,
     this.autovalidate = true,
+    this.onTap,
   });
 
   final TextEditingController controller;
@@ -121,6 +124,7 @@ class CustomTextFieldWithError extends StatefulWidget {
   final String? label;
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
+  final void Function()? onTap;
   final VoidCallback? onEditingComplete;
   final bool autovalidate;
 
@@ -160,6 +164,7 @@ class _CustomTextFieldWithErrorState extends State<CustomTextFieldWithError> {
           hintText: widget.hintText,
           label: widget.label,
           onEditingComplete: widget.onEditingComplete,
+          onTap: widget.onTap,
           onChanged: (v) {
             if (widget.autovalidate) _validate(v);
           },

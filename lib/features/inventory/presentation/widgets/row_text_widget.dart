@@ -30,9 +30,16 @@ Widget rowText(String key, String value) {
             style: appStyle(14, AppColors.kDark, FontWeight.bold),
           ),
         ),
-        ReusableText(
-          text: value,
-          style: appStyle(14, AppColors.kDark, FontWeight.w400),
+        SizedBox(
+          width: 180.w,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: ReusableText(
+              text: value,
+              style: appStyle(14, AppColors.kDark, FontWeight.w400),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ),
       ],
     ),

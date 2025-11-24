@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:phone_management_system_admin/core/services/api_service.dart';
 import 'package:phone_management_system_admin/features/inventory/domain/models/category_model.dart';
 
@@ -100,9 +101,13 @@ class CategoryRepository {
   }
 
   // ----------------- CREATE -----------------
-  Future<CategoryModel> create(Map<String, dynamic> payload) async {
-    final res = await api.post('/api/categories', payload);
-    return _mapToCategory(res.data['data']);
+  Future<CategoryModel> createCategory(FormData form) async {
+    final res = await api.post('/api/categories', form);
+    final data = res.data['data'];
+
+    return CategoryModel.fromJson(
+      data is Map<String, dynamic> ? data : Map<String, dynamic>.from(data),
+    );
   }
 
   // ----------------- UPDATE -----------------

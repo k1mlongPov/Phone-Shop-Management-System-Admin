@@ -26,7 +26,7 @@ class LoginWidget extends StatelessWidget {
           ),
         ),
         child: Container(
-          padding: EdgeInsets.all(30.r),
+          padding: EdgeInsets.fromLTRB(30.w, 12.h, 30.w, 12.h),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

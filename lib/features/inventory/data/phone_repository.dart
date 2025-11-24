@@ -2,12 +2,14 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:phone_management_system_admin/core/services/api_service.dart';
+import 'package:phone_management_system_admin/core/services/local_storage_service.dart';
 import 'package:phone_management_system_admin/features/inventory/domain/models/phone_model.dart';
 
 class PhoneRepository {
   final ApiService api;
+  final LocalStorageService storage;
 
-  PhoneRepository({required this.api});
+  PhoneRepository({required this.api, required this.storage});
 
   // ---------------- FETCH LIST ----------------
   Future<Map<String, dynamic>> fetchPhones({
@@ -249,7 +251,121 @@ class PhoneRepository {
 
     final formData = FormData.fromMap(map);
 
-    final res = await api.post('/api/phones', formData);
+    final token = storage.getAuthToken();
+
+    final res = await api.dioClient.post(
+      '/api/phones',
+      data: formData,
+      options: Options(
+        headers: {
+          "Authorization": "Bearer $token",
+          "Accept": "*/*",
+        },
+      ),
+    );
+
+    return Phone.fromJson(res.data['phone']);
+  }
+
+  Future<Phone> updatePhone({
+    required String id,
+    required String brand,
+    required String model,
+    required double purchasePrice,
+    required double sellingPrice,
+    required String currency,
+    required String categoryId,
+    String? supplierId,
+    Map<String, dynamic>? specs,
+    List<Map<String, dynamic>>? variants,
+    List<String>? imagePaths, // new images (optional)
+  }) async {
+    final Map<String, dynamic> map = {};
+
+    // BASIC
+    map['brand'] = brand;
+    map['model'] = model;
+    map['currency'] = currency;
+    map['category'] = categoryId;
+
+    if (supplierId != null && supplierId.isNotEmpty) {
+      map['supplier'] = supplierId;
+    }
+
+    // PRICING
+    map['pricing[purchasePrice]'] = purchasePrice.toString();
+    map['pricing[sellingPrice]'] = sellingPrice.toString();
+
+    // SPECS
+    if (specs != null) {
+      specs.forEach((key, value) {
+        if (value == null) return;
+
+        if (value is Map) {
+          value.forEach((subKey, subVal) {
+            if (subVal != null) {
+              map['specs[$key][$subKey]'] = subVal.toString();
+            }
+          });
+        } else {
+          map['specs[$key]'] = value.toString();
+        }
+      });
+    }
+
+    // VARIANTS
+    if (variants != null) {
+      for (int i = 0; i < variants.length; i++) {
+        final v = variants[i];
+
+        map['variants[$i][storage]'] = v['storage'];
+        map['variants[$i][color]'] = v['color'];
+        map['variants[$i][condition]'] = v['condition'];
+        map['variants[$i][stock]'] = v['stock'].toString();
+
+        map['variants[$i][pricing][purchasePrice]'] =
+            v['purchasePrice'].toString();
+        map['variants[$i][pricing][sellingPrice]'] =
+            v['sellingPrice'].toString();
+
+        if (v['sku'] != null) {
+          map['variants[$i][sku]'] = v['sku'];
+        }
+      }
+    }
+
+    // IMAGES (replace)
+    List<MultipartFile> uploads = [];
+
+    if (imagePaths != null) {
+      for (final path in imagePaths) {
+        uploads.add(
+          await MultipartFile.fromFile(
+            path,
+            filename: path.split('/').last,
+          ),
+        );
+      }
+    }
+
+    if (uploads.isNotEmpty) {
+      map['images'] = uploads;
+    }
+
+    final formData = FormData.fromMap(map);
+
+    final token = storage.getAuthToken();
+
+    final res = await api.dioClient.put(
+      '/api/phones/$id',
+      data: formData,
+      options: Options(
+        headers: {
+          "Authorization": "Bearer $token",
+          "Accept": "*/*",
+        },
+      ),
+    );
 
     return Phone.fromJson(res.data['phone']);
   }

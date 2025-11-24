@@ -14,6 +14,8 @@ class SubCategoryController extends GetxController {
 
   /// The currently active parent (for the UI)
   final RxString activeParentId = ''.obs;
+  final phoneParentId = '68f08df7f75a21c5fed27fb6';
+  final accessoryParentId = '68f08df7f75a21c5fed27fc0';
 
   /// Search + sort for *subcategories only*
   final Rx<CategorySortField> sortField = CategorySortField.createdAt.obs;
@@ -162,6 +164,10 @@ class SubCategoryController extends GetxController {
     );
 
     if (parent != null) {
+      // FIX: Set active parent
+      activeParentId.value = parent.id!;
+
+      // Fetch subcategories for this parent
       await fetchSubcategories(parent.id!, force: force);
     }
   }

@@ -29,7 +29,11 @@ class InitialBinding extends Bindings {
     );
 
     Get.put<AuthController>(
-        AuthController(repository: Get.find<AuthRepository>()),
-        permanent: true);
+      AuthController(
+        repository: Get.find<AuthRepository>(),
+        storage: Get.find<LocalStorageService>(),
+      ),
+      permanent: true,
+    );
   }
 }

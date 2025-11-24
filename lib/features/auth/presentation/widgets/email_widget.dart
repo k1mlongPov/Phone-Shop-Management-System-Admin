@@ -148,7 +148,6 @@ class _EmailWidgetState extends State<EmailWidget> {
                 // TODO: implement Google Sign-In, then call auth.fetchCurrentUser()
               },
             ),
-            SizedBox(height: 18.h),
             BottomAppBar(
               color: AppColors.kWhite,
               elevation: 0,

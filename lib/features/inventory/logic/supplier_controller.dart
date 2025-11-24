@@ -39,19 +39,20 @@ class SupplierController extends GetxController {
 
   // ---------------- CREATE -----------------
 
-  Future<bool> createSupplier(Map<String, dynamic> payload) async {
+  Future<void> createSupplier(Map<String, dynamic> payload) async {
     try {
-      final created = await repository.createSupplier(payload);
-      suppliers.insert(0, created);
+      isLoading.value = true;
 
-      Get.snackbar('Success', 'Supplier added');
-      return true;
+      final created = await repository.create(payload);
+      suppliers.add(created);
+
+      Get.snackbar('Success', 'Supplier created successfully');
     } catch (e) {
-      Get.snackbar('Error', e.toString());
-      return false;
+      Get.snackbar('Create failed', e.toString());
+    } finally {
+      isLoading.value = false;
     }
   }
-
   // ---------------- UPDATE -----------------
 
   Future<bool> updateSupplier(String id, Map<String, dynamic> payload) async {

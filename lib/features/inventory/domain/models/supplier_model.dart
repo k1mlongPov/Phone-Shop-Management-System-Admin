@@ -33,8 +33,41 @@ class SupplierModel {
     this.updatedAt,
   });
 
-  factory SupplierModel.fromJson(Map<String, dynamic> json) =>
-      _$SupplierModelFromJson(json);
+  factory SupplierModel.fromJson(Map<String, dynamic> raw) {
+    final json = Map<String, dynamic>.from(raw);
+
+    // Normalize id
+    if (json['_id'] != null && json['id'] == null) {
+      json['id'] = json['_id'].toString();
+    }
+
+    // Normalize suppliedProducts list
+    if (json['suppliedProducts'] is List) {
+      final list = json['suppliedProducts'] as List;
+
+      json['suppliedProducts'] = list.map((p) {
+        final map = Map<String, dynamic>.from(p);
+
+        // Normalize productId object -> string
+        if (map['productId'] is Map) {
+          final idMap = Map<String, dynamic>.from(map['productId']);
+          map['productId'] =
+              idMap['_id']?.toString() ?? idMap['id']?.toString() ?? "";
+        } else {
+          map['productId'] = map['productId']?.toString() ?? "";
+        }
+
+        // Normalize lastRestockDate to string
+        if (map['lastRestockDate'] != null) {
+          map['lastRestockDate'] = map['lastRestockDate'].toString();
+        }
+
+        return map;
+      }).toList();
+    }
+
+    return _$SupplierModelFromJson(json);
+  }
 
   Map<String, dynamic> toJson() => _$SupplierModelToJson(this);
 }

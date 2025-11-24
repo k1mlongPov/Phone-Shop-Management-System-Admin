@@ -46,7 +46,7 @@ class EmailPhoneSwitch extends StatelessWidget {
                   alignment:
                       isEmail ? Alignment.centerLeft : Alignment.centerRight,
                   child: Container(
-                    width: width / 2,
+                    width: width * .45,
                     height: height - 4,
                     margin: const EdgeInsets.all(2),
                     decoration: BoxDecoration(

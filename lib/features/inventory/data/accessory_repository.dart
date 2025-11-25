@@ -94,7 +94,6 @@ class AccessoryRepository {
     };
   }
 
-  // ----------------- GET SINGLE -----------------
   Future<Accessory> getAccessory(String id) async {
     final res = await api.get('/api/accessories/$id');
     final Map<String, dynamic> map = res.data is Map<String, dynamic>
@@ -248,12 +247,10 @@ class AccessoryRepository {
     return Accessory.fromJson(response.data["data"]);
   }
 
-  // ----------------- DELETE -----------------
   Future<void> deleteAccessory(String id) async {
     await api.delete('/api/accessories/$id');
   }
 
-  // ----------------- RESTOCK -----------------
   Future<Accessory> restock({
     required String id,
     required int quantity,
@@ -270,7 +267,6 @@ class AccessoryRepository {
     return Accessory.fromJson(Map<String, dynamic>.from(data));
   }
 
-  // ----------------- HELPERS -----------------
   int _parseInt(dynamic v) {
     if (v == null) return 0;
     if (v is int) return v;

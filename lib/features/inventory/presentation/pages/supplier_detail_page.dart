@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:phone_management_system_admin/core/routes/app_routes.dart';
 
 import 'package:phone_management_system_admin/core/theme/app_colors.dart';
+import 'package:phone_management_system_admin/features/inventory/logic/supplier_controller.dart';
+import 'package:phone_management_system_admin/features/inventory/presentation/pages/supplier_form_bottom_sheet.dart';
 import 'package:phone_management_system_admin/shared/constants/app_size.dart';
 import 'package:phone_management_system_admin/shared/styles/app_style.dart';
+import 'package:phone_management_system_admin/shared/widgets/app_snackbar.dart';
+import 'package:phone_management_system_admin/shared/widgets/confirm_dialog.dart';
 import 'package:phone_management_system_admin/shared/widgets/reusable_text.dart';
 
 import 'package:phone_management_system_admin/features/inventory/domain/models/supplier_model.dart';
@@ -13,81 +18,162 @@ import 'package:phone_management_system_admin/features/inventory/domain/models/s
 class SupplierDetailPage extends StatelessWidget {
   const SupplierDetailPage({super.key});
 
+  Future<void> openCreateSupplierSheet(BuildContext context,
+      {SupplierModel? supplier}) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => SupplierFormBottomSheet(supplier: supplier),
+      sheetAnimationStyle: AnimationStyle(
+        duration: const Duration(milliseconds: 1500),
+        reverseDuration: const Duration(milliseconds: 800),
+        curve: Curves.easeOutBack,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final SupplierModel supplier = Get.arguments as SupplierModel;
-
-    final supplied = supplier.suppliedProducts ?? [];
-    final totalProducts = supplied.length;
-
-    // last restock from suppliedProducts
-    String lastRestock = 'N/A';
-    if (supplied.isNotEmpty) {
-      DateTime? latest;
-      for (final sp in supplied) {
-        if (sp.lastRestockDate == null || sp.lastRestockDate!.isEmpty) continue;
-        final dt = DateTime.tryParse(sp.lastRestockDate!);
-        if (dt != null) {
-          if (latest == null || dt.isAfter(latest)) latest = dt;
-        }
-      }
-      if (latest != null) {
-        lastRestock = DateFormat('dd MMM yyyy').format(latest);
-      }
-    }
-
-    final createdAt = DateTime.tryParse(supplier.createdAt ?? '');
-    final updatedAt = DateTime.tryParse(supplier.updatedAt ?? '');
-
-    final createdStr =
-        createdAt != null ? DateFormat('dd MMM yyyy').format(createdAt) : 'N/A';
-    final updatedStr =
-        updatedAt != null ? DateFormat('dd MMM yyyy').format(updatedAt) : 'N/A';
+    final SupplierModel argSupplier = Get.arguments as SupplierModel;
+    final SupplierController supplierCtrl = Get.find<SupplierController>();
 
     return Scaffold(
       appBar: AppBar(
         leading: GestureDetector(
           onTap: () => Get.back(),
-          child: Icon(
-            Icons.arrow_back,
-            size: 22.r,
-            color: AppColors.kWhite,
+          child: Icon(Icons.arrow_back, size: 22.r, color: AppColors.kWhite),
+        ),
+        title: Obx(() {
+          final supplier = _findSupplier(supplierCtrl, argSupplier);
+          return Text(
+            supplier.name ?? "Supplier detail",
+            style: appStyle(16, AppColors.kWhite, FontWeight.w600),
+          );
+        }),
+        actions: [
+          // EDIT
+          GestureDetector(
+            onTap: () async {
+              final supplier = _findSupplier(supplierCtrl, argSupplier);
+              await openCreateSupplierSheet(context, supplier: supplier);
+            },
+            child: SizedBox(
+              width: 35.w,
+              height: 35.h,
+              child: Icon(Icons.edit, size: 22.r, color: AppColors.kWhite),
+            ),
           ),
-        ),
-        title: Text(
-          supplier.name ?? 'Supplier detail',
-          style: appStyle(16, AppColors.kWhite, FontWeight.w600),
-        ),
+          SizedBox(width: 12.w),
+
+          // DELETE
+          GestureDetector(
+            onTap: () async {
+              final yes = await showConfirmDialog(
+                  title: "Delete Supplier",
+                  message:
+                      "Are you sure you want to delete this supplier? This action cannot be undone.",
+                  confirmText: "Delete",
+                  confirmColor: Colors.red);
+
+              if (yes) {
+                AppSnackbar.success(
+                  title: 'Success',
+                  message: 'Deleted supplier successfully',
+                );
+                supplierCtrl.deleteSupplier(argSupplier.id!).then((_) {
+                  Get.offAllNamed(
+                    Routes.APPSHELL,
+                    arguments: {'tab': 1},
+                  );
+                });
+              }
+            },
+            child: SizedBox(
+              width: 35.w,
+              height: 35.h,
+              child: Icon(Icons.delete, size: 22.r, color: AppColors.kRed),
+            ),
+          ),
+          SizedBox(width: 12.w),
+        ],
         backgroundColor: AppColors.kPrimary,
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(12.r),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeaderCard(supplier),
-            SizedBox(height: 12.h),
-            _buildSummaryRow(
-              totalProducts: totalProducts,
-              lastRestock: lastRestock,
-              createdStr: createdStr,
-              updatedStr: updatedStr,
-            ),
-            SizedBox(height: 12.h),
-            _buildContactCard(supplier),
-            SizedBox(height: 12.h),
-            _buildAddressNotesCard(supplier),
-            SizedBox(height: 16.h),
-            _buildSuppliedProductsSection(supplier),
-          ],
-        ),
-      ),
+
+      // 🔥 BODY NOW REACTIVE
+      body: Obx(() {
+        final supplier = _findSupplier(supplierCtrl, argSupplier);
+
+        final supplied = supplier.suppliedProducts ?? [];
+        final totalProducts = supplied.length;
+
+        String lastRestock = _computeLastRestock(supplied);
+
+        final createdStr = _formatDate(supplier.createdAt);
+        final updatedStr = _formatDate(supplier.updatedAt);
+
+        return SingleChildScrollView(
+          padding: EdgeInsets.all(12.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeaderCard(supplier),
+              SizedBox(height: 12.h),
+              _buildSummaryRow(
+                totalProducts: totalProducts,
+                lastRestock: lastRestock,
+                createdStr: createdStr,
+                updatedStr: updatedStr,
+              ),
+              SizedBox(height: 12.h),
+              _buildContactCard(supplier),
+              SizedBox(height: 12.h),
+              _buildAddressNotesCard(supplier),
+              SizedBox(height: 16.h),
+              _buildSuppliedProductsSection(supplier),
+            ],
+          ),
+        );
+      }),
     );
   }
 
-  // -------------------------------------------------------
-  // HEADER CARD
-  // -------------------------------------------------------
+  // -------------------------------------------------------------
+  // HELPERS
+  // -------------------------------------------------------------
+  SupplierModel _findSupplier(
+      SupplierController ctrl, SupplierModel argSupplier) {
+    return ctrl.suppliers.firstWhere(
+      (s) => s.id == argSupplier.id,
+      orElse: () => argSupplier,
+    );
+  }
+
+  String _formatDate(String? iso) {
+    if (iso == null || iso.isEmpty) return "N/A";
+    final dt = DateTime.tryParse(iso);
+    if (dt == null) return "N/A";
+    return DateFormat('dd MMM yyyy').format(dt);
+  }
+
+  String _computeLastRestock(List<SuppliedProduct> list) {
+    if (list.isEmpty) return "N/A";
+
+    DateTime? latest;
+    for (final sp in list) {
+      if (sp.lastRestockDate == null || sp.lastRestockDate!.isEmpty) continue;
+      final dt = DateTime.tryParse(sp.lastRestockDate!);
+      if (dt != null) {
+        if (latest == null || dt.isAfter(latest)) latest = dt;
+      }
+    }
+
+    return latest != null ? DateFormat('dd MMM yyyy').format(latest) : "N/A";
+  }
+
   Widget _buildHeaderCard(SupplierModel s) {
     return Container(
       width: AppSize.width,
@@ -235,9 +321,6 @@ class SupplierDetailPage extends StatelessWidget {
     );
   }
 
-  // -------------------------------------------------------
-  // CONTACT CARD
-  // -------------------------------------------------------
   Widget _buildContactCard(SupplierModel s) {
     return Container(
       width: AppSize.width,
@@ -285,9 +368,6 @@ class SupplierDetailPage extends StatelessWidget {
     );
   }
 
-  // -------------------------------------------------------
-  // ADDRESS + NOTES CARD
-  // -------------------------------------------------------
   Widget _buildAddressNotesCard(SupplierModel s) {
     return Container(
       width: AppSize.width,
@@ -365,9 +445,6 @@ class SupplierDetailPage extends StatelessWidget {
     );
   }
 
-  // -------------------------------------------------------
-  // SUPPLIED PRODUCTS SECTION
-  // -------------------------------------------------------
   Widget _buildSuppliedProductsSection(SupplierModel s) {
     final supplied = s.suppliedProducts ?? [];
 

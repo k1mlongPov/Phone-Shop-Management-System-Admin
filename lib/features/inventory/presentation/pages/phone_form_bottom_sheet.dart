@@ -1,11 +1,9 @@
-import 'package:dio/dio.dart' as dio;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import 'package:phone_management_system_admin/core/services/api_service.dart';
 import 'package:phone_management_system_admin/core/theme/app_colors.dart';
 import 'package:phone_management_system_admin/features/inventory/domain/models/phone_model.dart';
 import 'package:phone_management_system_admin/features/inventory/logic/category_controller.dart';
@@ -30,7 +28,7 @@ class _VariantFormData {
   final TextEditingController purchaseCtrl;
   final TextEditingController sellingCtrl;
   final TextEditingController stockCtrl;
-  String condition; // stored as ui-value: new | imported | used
+  String condition;
 
   _VariantFormData({
     String? storage,
@@ -38,7 +36,7 @@ class _VariantFormData {
     String? purchase,
     String? selling,
     String? stock,
-    dynamic condition, // may be backend value or UI value
+    dynamic condition,
   })  : storageCtrl = TextEditingController(text: storage),
         colorCtrl = TextEditingController(text: color),
         purchaseCtrl = TextEditingController(text: purchase),
@@ -109,8 +107,6 @@ class _PhoneFormBottomSheetState extends State<PhoneFormBottomSheet> {
   final RxList<XFile> pickedImages = <XFile>[].obs;
 
   bool _isSubmitting = false;
-
-  late final ApiService _api;
   late final PhoneController _phoneCtrl;
   late final CategoryController _catCtrl;
   late final SupplierController _supCtrl;
@@ -120,7 +116,6 @@ class _PhoneFormBottomSheetState extends State<PhoneFormBottomSheet> {
   @override
   void initState() {
     super.initState();
-    _api = Get.find<ApiService>();
     _phoneCtrl = Get.find<PhoneController>();
     _catCtrl = Get.find<CategoryController>();
     _supCtrl = Get.find<SupplierController>();
@@ -434,160 +429,136 @@ class _PhoneFormBottomSheetState extends State<PhoneFormBottomSheet> {
     setState(() => _isSubmitting = true);
 
     try {
-      final form = dio.FormData();
+      final Map<String, dynamic> input = {
+        'brand': _brandCtrl.text.trim(),
+        'model': _modelCtrl.text.trim(),
+        'currency': _currency,
+        'category': _selectedCategoryId,
+        'supplier': _selectedSupplierId,
+        'purchasePrice': double.tryParse(_purchaseCtrl.text.trim()) ?? 0,
+        'sellingPrice': double.tryParse(_sellingCtrl.text.trim()) ?? 0,
+      };
 
-      // base fields
-      form.fields.addAll([
-        MapEntry('brand', _brandCtrl.text.trim()),
-        MapEntry('model', _modelCtrl.text.trim()),
-        MapEntry(
-          'pricing[purchasePrice]',
-          _purchaseCtrl.text.trim().isEmpty ? '0' : _purchaseCtrl.text.trim(),
-        ),
-        MapEntry(
-          'pricing[sellingPrice]',
-          _sellingCtrl.text.trim().isEmpty ? '0' : _sellingCtrl.text.trim(),
-        ),
-        MapEntry('currency', _currency),
-      ]);
+      // -------- SPECS --------
+      final Map<String, dynamic> specs = {};
 
-      if (_selectedCategoryId != null && _selectedCategoryId!.isNotEmpty) {
-        form.fields.add(MapEntry('category', _selectedCategoryId!));
-      }
-      if (_selectedSupplierId != null && _selectedSupplierId!.isNotEmpty) {
-        form.fields.add(MapEntry('supplier', _selectedSupplierId!));
+      void addSpec(String key, String value) {
+        if (value.trim().isNotEmpty) specs[key] = value.trim();
       }
 
-      // specs
-      if (_osCtrl.text.trim().isNotEmpty) {
-        form.fields.add(MapEntry('specs[os]', _osCtrl.text.trim()));
-      }
-      if (_chipsetCtrl.text.trim().isNotEmpty) {
-        form.fields.add(MapEntry('specs[chipset]', _chipsetCtrl.text.trim()));
-      }
-      if (_ramCtrl.text.trim().isNotEmpty) {
-        form.fields.add(MapEntry('specs[ram]', _ramCtrl.text.trim()));
-      }
-      if (_chargingCtrl.text.trim().isNotEmpty) {
-        form.fields
-            .add(MapEntry('specs[chargingW]', _chargingCtrl.text.trim()));
-      }
+      // flat values
+      addSpec('os', _osCtrl.text);
+      addSpec('chipset', _chipsetCtrl.text);
+      addSpec('ram', _ramCtrl.text);
+      addSpec('chargingW', _chargingCtrl.text);
 
       // cameras
+      final cam = {};
       if (_mainCamCtrl.text.trim().isNotEmpty) {
-        form.fields
-            .add(MapEntry('specs[cameras][main]', _mainCamCtrl.text.trim()));
+        cam['main'] = _mainCamCtrl.text.trim();
       }
       if (_frontCamCtrl.text.trim().isNotEmpty) {
-        form.fields
-            .add(MapEntry('specs[cameras][front]', _frontCamCtrl.text.trim()));
+        cam['front'] = _frontCamCtrl.text.trim();
       }
+      if (cam.isNotEmpty) specs['cameras'] = cam;
 
       // display
+      final display = {};
       if (_displaySizeCtrl.text.trim().isNotEmpty) {
-        form.fields.add(
-            MapEntry('specs[display][sizeIn]', _displaySizeCtrl.text.trim()));
+        display['sizeIn'] = _displaySizeCtrl.text.trim();
       }
       if (_displayResCtrl.text.trim().isNotEmpty) {
-        form.fields.add(MapEntry(
-            'specs[display][resolution]', _displayResCtrl.text.trim()));
+        display['resolution'] = _displayResCtrl.text.trim();
       }
       if (_displayTypeCtrl.text.trim().isNotEmpty) {
-        form.fields.add(
-            MapEntry('specs[display][type]', _displayTypeCtrl.text.trim()));
+        display['type'] = _displayTypeCtrl.text.trim();
       }
       if (_refreshRateCtrl.text.trim().isNotEmpty) {
-        form.fields.add(MapEntry(
-            'specs[display][refreshRate]', _refreshRateCtrl.text.trim()));
+        display['refreshRate'] = _refreshRateCtrl.text.trim();
+      }
+      if (display.isNotEmpty) specs['display'] = display;
+
+      if (specs.isNotEmpty) {
+        input['specs'] = specs;
       }
 
-      // variants
+      // -------- VARIANTS --------
+      List<Map<String, dynamic>> variants = [];
+
+      String mapConditionForBackend(String uiValue) {
+        switch (uiValue) {
+          case 'new':
+            return 'new_company';
+          case 'imported':
+            return 'new_import';
+          case 'used':
+            return 'used_local';
+          default:
+            return 'new_company';
+        }
+      }
+
       for (int i = 0; i < _variants.length; i++) {
         final v = _variants[i];
-        final prefix = 'variants[$i]';
-        String mapConditionForBackend(String uiValue) {
-          switch (uiValue) {
-            case 'new':
-              return 'new_company';
-            case 'imported':
-              return 'new_import';
-            case 'used':
-              return 'used_local';
-            default:
-              return 'new_company';
-          }
-        }
 
-        if (v.storageCtrl.text.trim().isNotEmpty) {
-          form.fields
-              .add(MapEntry('$prefix[storage]', v.storageCtrl.text.trim()));
-        }
-        if (v.colorCtrl.text.trim().isNotEmpty) {
-          form.fields.add(MapEntry('$prefix[color]', v.colorCtrl.text.trim()));
-        }
-
-        if (v.purchaseCtrl.text.trim().isNotEmpty) {
-          form.fields.add(MapEntry(
-              '$prefix[pricing][purchasePrice]', v.purchaseCtrl.text.trim()));
-        }
-        if (v.sellingCtrl.text.trim().isNotEmpty) {
-          form.fields.add(MapEntry(
-              '$prefix[pricing][sellingPrice]', v.sellingCtrl.text.trim()));
-        }
-        if (v.stockCtrl.text.trim().isNotEmpty) {
-          form.fields.add(MapEntry('$prefix[stock]', v.stockCtrl.text.trim()));
-        }
-
-        form.fields.add(
-          MapEntry('$prefix[condition]', mapConditionForBackend(v.condition)),
-        );
+        variants.add({
+          'storage': v.storageCtrl.text.trim(),
+          'color': v.colorCtrl.text.trim(),
+          'condition': mapConditionForBackend(v.condition),
+          'stock': int.tryParse(v.stockCtrl.text.trim()) ?? 0,
+          'purchasePrice': double.tryParse(v.purchaseCtrl.text.trim()) ?? 0,
+          'sellingPrice': double.tryParse(v.sellingCtrl.text.trim()) ?? 0,
+        });
       }
 
-      // new images
-      for (final x in pickedImages) {
-        final file = await dio.MultipartFile.fromFile(
-          x.path,
-          filename: x.name,
-        );
-        form.files.add(MapEntry('images', file));
+      if (variants.isNotEmpty) {
+        input['variants'] = variants;
       }
 
-      dio.Response res;
+      // --------------------------
+      // CONTROLLER CALL
+      // --------------------------
+      bool ok = false;
+
       if (_isEdit && widget.phone?.id != null) {
-        // UPDATE
-        res = await _api.put('/api/phones/${widget.phone!.id}', form);
+        ok = await _phoneCtrl.updatePhone(
+          widget.phone!.id!,
+          input,
+          pickedImages,
+        );
       } else {
-        // CREATE
-        res = await _api.post('/api/phones', form);
+        ok = await _phoneCtrl.createPhone(
+          input,
+          pickedImages,
+        );
       }
 
-      final data = res.data;
-      final success = (data is Map && data['success'] == true);
-
-      if (!success) {
+      // --------------------------
+      // UI FEEDBACK
+      // --------------------------
+      if (!ok) {
         AppSnackbar.error(
-            title: 'Error',
-            message:
-                _isEdit ? 'Failed to update phone' : 'Failed to create phone');
-      } else {
-        // refresh list from server
-        await _phoneCtrl.fetchPhones(reset: true);
-        if (success) {
-          AppSnackbar.success(
-            title: 'Success',
-            message: _isEdit
-                ? 'Phone updated successfully'
-                : 'Phone created successfully',
-          );
-
-          if (!mounted) return;
-          Navigator.of(context).pop();
-
-          Future.delayed(const Duration(milliseconds: 200), () {
-            _phoneCtrl.fetchPhones(reset: true);
-          });
-        }
+          title: 'Error',
+          message:
+              _isEdit ? 'Failed to update phone' : 'Failed to create phone',
+        );
+        return;
       }
+
+      AppSnackbar.success(
+        title: 'Success',
+        message: _isEdit
+            ? 'Phone updated successfully'
+            : 'Phone created successfully',
+      );
+
+      if (!mounted) return;
+      Navigator.of(context).pop();
+
+      // Refresh list again (optional but safe)
+      Future.delayed(const Duration(milliseconds: 150), () {
+        _phoneCtrl.fetchPhones(reset: true);
+      });
     } catch (e) {
       Get.snackbar('Error', e.toString());
     } finally {

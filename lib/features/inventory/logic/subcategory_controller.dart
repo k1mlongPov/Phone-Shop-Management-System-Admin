@@ -8,21 +8,17 @@ class SubCategoryController extends GetxController {
   final ApiService api = Get.find<ApiService>();
   final CategoryController categoryController = Get.find<CategoryController>();
 
-  /// Cache: parentId -> list of subcategories
   final RxMap<String, List<CategoryModel>> subcategoriesByParent =
       <String, List<CategoryModel>>{}.obs;
 
-  /// The currently active parent (for the UI)
   final RxString activeParentId = ''.obs;
   final phoneParentId = '68f08df7f75a21c5fed27fb6';
   final accessoryParentId = '68f08df7f75a21c5fed27fc0';
 
-  /// Search + sort for *subcategories only*
   final Rx<CategorySortField> sortField = CategorySortField.createdAt.obs;
-  final RxString sortOrder = 'desc'.obs; // newest first
+  final RxString sortOrder = 'desc'.obs;
   final RxString query = ''.obs;
 
-  /// Loading / error
   final RxBool isLoading = false.obs;
   final RxnString error = RxnString();
 
@@ -49,8 +45,6 @@ class SubCategoryController extends GetxController {
       }
     }
   }
-
-  // ------------------- CORE FETCH -------------------
 
   Future<void> fetchSubcategories(String parentId, {bool force = false}) async {
     if (parentId.isEmpty) return;
@@ -99,7 +93,6 @@ class SubCategoryController extends GetxController {
     await fetchSubcategories(parentId, force: force);
   }
 
-  /// Called by UI when user taps a parent button
   void setActiveParent(String parentId) {
     if (parentId.isEmpty) return;
     if (activeParentId.value == parentId &&
@@ -121,16 +114,12 @@ class SubCategoryController extends GetxController {
     return subcategoriesByParent[parentId] ?? <CategoryModel>[];
   }
 
-  // ------------------- SEARCH -------------------
-
   void setQuery(String text) {
     query.value = text.trim();
     if (activeParentId.value.isNotEmpty) {
       fetchSubcategories(activeParentId.value, force: true);
     }
   }
-
-  // ------------------- SORT -------------------
 
   void setSortField(CategorySortField field) {
     if (sortField.value == field) {

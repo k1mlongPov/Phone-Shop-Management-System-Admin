@@ -111,9 +111,13 @@ class CategoryRepository {
   }
 
   // ----------------- UPDATE -----------------
-  Future<CategoryModel> update(String id, Map<String, dynamic> payload) async {
-    final res = await api.put('/api/categories/$id', payload);
-    return _mapToCategory(res.data['data']);
+  Future<CategoryModel> update(String id, FormData form) async {
+    final res = await api.put('/api/categories/$id', form);
+    final data = res.data['data'];
+
+    return CategoryModel.fromJson(
+      data is Map<String, dynamic> ? data : Map<String, dynamic>.from(data),
+    );
   }
 
   // ----------------- DELETE -----------------

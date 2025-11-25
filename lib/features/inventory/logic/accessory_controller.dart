@@ -45,17 +45,15 @@ class AccessoryController extends GetxController {
 
   final currencyController = TextEditingController(text: "USD");
 
-  final categoryId = ''.obs; // MUST BE ID
-  final subcategoryId = ''.obs; // MUST BE ID
-  final supplierId = ''.obs; // MUST BE ID (REQUIRED)
+  final categoryId = ''.obs;
+  final subcategoryId = ''.obs;
+  final supplierId = ''.obs;
 
   final stockController = TextEditingController(text: "0");
 
   final compatibilityController = TextEditingController();
 
-  // ======================
   // ATTRIBUTES
-  // ======================
   RxList<AttributeField> attributes = <AttributeField>[].obs;
   void addAttribute() => attributes.add(AttributeField());
   void removeAttribute(int i) => attributes.removeAt(i);
@@ -70,9 +68,7 @@ class AccessoryController extends GetxController {
     return map;
   }
 
-  // ======================
   // IMAGES
-  // ======================
   RxList<XFile> pickedImages = <XFile>[].obs;
   final ImagePicker picker = ImagePicker();
 
@@ -89,14 +85,11 @@ class AccessoryController extends GetxController {
     fetchAccessories(reset: true);
   }
 
-  // ----------------- actions -----------------
-
   void setQuery(String q) {
     query.value = q;
     fetchAccessories(reset: true);
   }
 
-  /// set server sort key (ex: 'price_asc' or 'name' etc)
   void setSortField(AccessorySortField field) {
     if (sortField.value == field) {
       // user clicked same sort -> toggle asc/desc
@@ -125,7 +118,6 @@ class AccessoryController extends GetxController {
     fetchAccessories(reset: true);
   }
 
-  // ----------------- fetch list -----------------
   Future<void> fetchAccessories({bool reset = false}) async {
     if (reset) {
       page.value = 1;
@@ -178,14 +170,32 @@ class AccessoryController extends GetxController {
     }
   }
 
-  // pull to refresh
+  Future<Accessory?> fetchAccessoryById(String id) async {
+    try {
+      isLoading.value = true;
+      final acc = await repository.getAccessory(id);
+      // update cache (insert or replace)
+      final idx = accessories.indexWhere((a) => a.id == acc.id);
+      if (idx == -1 && acc.id != null) {
+        accessories.insert(0, acc);
+      } else if (idx != -1) {
+        accessories[idx] = acc;
+      }
+      return acc;
+    } catch (e) {
+      print('AccessoryController.fetchAccessoryById error: $e');
+      return null;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   @override
   Future<void> refresh() async {
     page.value = 1;
     await fetchAccessories(reset: true);
   }
 
-  // infinite scroll
   Future<void> loadMore() async {
     if (isLoadingMore.value) return;
     if (page.value >= pages.value) return;
@@ -285,28 +295,6 @@ class AccessoryController extends GetxController {
     if (idx != -1) accessories[idx] = updated;
   }
 
-  // ----------------- single item -----------------
-  Future<Accessory?> fetchAccessoryById(String id) async {
-    try {
-      isLoading.value = true;
-      final acc = await repository.getAccessory(id);
-      // update cache (insert or replace)
-      final idx = accessories.indexWhere((a) => a.id == acc.id);
-      if (idx == -1 && acc.id != null) {
-        accessories.insert(0, acc);
-      } else if (idx != -1) {
-        accessories[idx] = acc;
-      }
-      return acc;
-    } catch (e) {
-      print('AccessoryController.fetchAccessoryById error: $e');
-      return null;
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  // ----------------- delete / restock -----------------
   Future<void> deleteAccessory(String id) async {
     try {
       await repository.deleteAccessory(id);

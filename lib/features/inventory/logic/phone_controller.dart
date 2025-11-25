@@ -36,7 +36,6 @@ class PhoneController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Debounce search input so typing doesn't flood the API
     debounce<String>(query, (_) => fetchPhones(reset: true),
         time: const Duration(milliseconds: 600));
     debounce<String>(query, (_) {

@@ -6,7 +6,7 @@ import 'package:phone_management_system_admin/core/theme/app_colors.dart';
 import 'package:phone_management_system_admin/features/inventory/domain/models/category_model.dart';
 import 'package:phone_management_system_admin/features/inventory/logic/category_controller.dart';
 import 'package:phone_management_system_admin/features/inventory/logic/subcategory_controller.dart';
-import 'package:phone_management_system_admin/features/inventory/presentation/pages/create_category_bottom_sheet.dart';
+import 'package:phone_management_system_admin/features/inventory/presentation/pages/category_form_bottom_sheet.dart';
 import 'package:phone_management_system_admin/features/inventory/presentation/widgets/category_widgets/category_tile.dart';
 import 'package:phone_management_system_admin/features/inventory/presentation/widgets/category_widgets/subcategory_tile.dart';
 import 'package:phone_management_system_admin/features/inventory/presentation/widgets/product_shimmer.dart';
@@ -19,15 +19,18 @@ class CategoryPage extends StatelessWidget {
   final CategoryController catCtrl = Get.find<CategoryController>();
   final SubCategoryController subCtrl = Get.find<SubCategoryController>();
 
-  void openCreateCategorySheet(BuildContext context) {
-    showModalBottomSheet(
+  Future<void> openCreateCategorySheet(
+    BuildContext context, {
+    CategoryModel? category,
+  }) {
+    return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (_) => const CreateCategoryBottomSheet(),
+      builder: (_) => const CategoryFormBottomSheet(),
       sheetAnimationStyle: AnimationStyle(
         duration: const Duration(milliseconds: 1500),
         reverseDuration: const Duration(milliseconds: 800),
@@ -149,8 +152,6 @@ class CategoryPage extends StatelessWidget {
                     return SubcategoryTile(
                       category: list[index],
                       parentId: parentId,
-                      onEdit: _onEdit,
-                      onDelete: _onDelete,
                     );
                   },
                 ),
@@ -160,36 +161,5 @@ class CategoryPage extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  Future<void> _onDelete(
-      BuildContext context, CategoryModel c, String parentId) async {
-    final confirmed = await Get.dialog<bool>(
-      AlertDialog(
-        title: const Text("Delete Subcategory"),
-        content: Text('Are you sure you want to delete "${c.name}"?'),
-        actions: [
-          TextButton(
-              onPressed: () => Get.back(result: false),
-              child: const Text("Cancel")),
-          ElevatedButton(
-              onPressed: () => Get.back(result: true),
-              child: const Text("Delete")),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        await catCtrl.deleteCategory(c.id ?? '');
-        await subCtrl.refetchSubcategories(parentId);
-      } catch (e) {
-        Get.snackbar("Error", e.toString());
-      }
-    }
-  }
-
-  void _onEdit(CategoryModel c) {
-    Get.toNamed('/categories/edit', arguments: c);
   }
 }

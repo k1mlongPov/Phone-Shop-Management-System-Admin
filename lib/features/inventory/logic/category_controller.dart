@@ -11,18 +11,16 @@ class CategoryController extends GetxController {
   final CategoryRepository repository;
   CategoryController({required this.repository});
 
-  // Internal collections
   final RxList<CategoryModel> rootCategories = <CategoryModel>[].obs;
   final RxList<CategoryModel> subcategories = <CategoryModel>[].obs;
 
   final RxMap<String, String> _parentNameToId = <String, String>{}.obs;
 
   final Rx<CategorySortField> sortField = CategorySortField.createdAt.obs;
-  final RxString sortOrder = 'asc'.obs; // asc | desc
-  final RxString sortBy = ''.obs; // server key
+  final RxString sortOrder = 'asc'.obs;
+  final RxString sortBy = ''.obs;
   final RxString query = ''.obs;
 
-  // Internal loading flags
   final RxBool isLoadingRoot = false.obs;
   final RxBool isLoadingSub = false.obs;
   final RxBool isLoadingMoreInternal = false.obs;
@@ -31,17 +29,14 @@ class CategoryController extends GetxController {
 
   final RxnString errorInternal = RxnString();
 
-  // Pagination for subcategories
   final RxInt subPage = 1.obs;
   int subPages = 1;
   int subLimit = 100;
 
-  // Subcategory search / sort state
   final RxString subQuery = ''.obs;
-  final RxString subSortBy = ''.obs; // e.g. 'name' or 'createdAt'
+  final RxString subSortBy = ''.obs;
   final RxString subSortOrder = 'asc'.obs;
 
-  // Pagination (for root categories; backend currently returns all roots so pages=1)
   int page = 1;
   int pages = 1;
   int limit = 20;
@@ -52,7 +47,6 @@ class CategoryController extends GetxController {
     loadRootCategories();
   }
 
-  // ------------------ SEARCH HANDLING (REQUIRED) ------------------
   void setQuery(String q) {
     query.value = q;
     fetchCategories(reset: true);
@@ -102,9 +96,6 @@ class CategoryController extends GetxController {
     }
   }
 
-  // -------------------------
-  // Root categories
-  // -------------------------
   Future<void> loadRootCategories() async {
     try {
       isLoadingRoot.value = true;
@@ -275,21 +266,17 @@ class CategoryController extends GetxController {
     return subcategories;
   }
 
-  // -------------------------
-  // Create / update / delete (unchanged)
-  // -------------------------
-  Future<void> createCategoryWithImage({
+  Future<void> createCategory({
     required String name,
     String? description,
     String? parentId,
-    MultipartFile? imageFile,
+    dio.MultipartFile? imageFile,
   }) async {
     try {
       final form = dio.FormData();
       // Required
       form.fields.add(MapEntry("name", name.trim()));
 
-      // Optional
       if (description != null && description.trim().isNotEmpty) {
         form.fields.add(MapEntry("description", description.trim()));
       }
@@ -299,7 +286,7 @@ class CategoryController extends GetxController {
       }
 
       if (imageFile != null) {
-        form.files.add(MapEntry("image", imageFile as dio.MultipartFile));
+        form.files.add(MapEntry("image", imageFile));
       }
 
       final created = await repository.createCategory(form);
@@ -309,36 +296,50 @@ class CategoryController extends GetxController {
         // Root category
         rootCategories.insert(0, created);
       } else {
-        // Subcategory
         subcategories.insert(0, created);
-
-        // Also update SubCategoryController cache if used
         try {
           final subCtrl = Get.find<SubCategoryController>();
           await subCtrl.refetchSubcategories(parentId);
         } catch (_) {}
       }
-
-      Get.snackbar("Created", "Category created successfully");
     } catch (e, st) {
       print('createCategoryWithImage ERROR: $e\n$st');
       Get.snackbar("Error", e.toString());
     }
   }
 
-  Future<void> updateCategory(String id, Map<String, dynamic> payload) async {
+  Future<void> updateCategory(
+    String id, {
+    required String name,
+    String? description,
+    required String parentId,
+    dio.MultipartFile? imageFile,
+  }) async {
     try {
-      final updated = await repository.update(id, payload);
+      final form = dio.FormData();
 
+      form.fields.add(MapEntry("name", name));
+
+      if (description != null && description.trim().isNotEmpty) {
+        form.fields.add(MapEntry("description", description.trim()));
+      }
+
+      form.fields.add(MapEntry("parent", parentId));
+
+      if (imageFile != null) {
+        form.files.add(MapEntry("image", imageFile));
+      }
+
+      final updated = await repository.update(id, form);
+
+      // Update lists
       final rootIndex = rootCategories.indexWhere((c) => c.id == id);
       if (rootIndex != -1) rootCategories[rootIndex] = updated;
 
       final subIndex = subcategories.indexWhere((c) => c.id == id);
       if (subIndex != -1) subcategories[subIndex] = updated;
-
-      Get.snackbar('Updated', 'Category updated successfully');
     } catch (e) {
-      Get.snackbar('Update failed', e.toString());
+      Get.snackbar('Error', e.toString());
     }
   }
 
@@ -347,15 +348,12 @@ class CategoryController extends GetxController {
       await repository.delete(id);
       rootCategories.removeWhere((c) => c.id == id);
       subcategories.removeWhere((c) => c.id == id);
-      Get.snackbar('Deleted', 'Category deleted');
+      update();
     } catch (e) {
       Get.snackbar('Delete failed', e.toString());
     }
   }
 
-  // -------------------------
-  // Adapter API for InventoryTab (unchanged)
-  // -------------------------
   RxList<CategoryModel> get items => rootCategories;
   RxBool get isLoading => isLoadingRoot;
   RxBool get isLoadingMore => isLoadingMoreInternal;

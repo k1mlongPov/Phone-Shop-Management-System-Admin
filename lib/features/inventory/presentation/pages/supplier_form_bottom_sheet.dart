@@ -3,20 +3,26 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import 'package:phone_management_system_admin/core/theme/app_colors.dart';
+import 'package:phone_management_system_admin/shared/widgets/app_snackbar.dart';
 import 'package:phone_management_system_admin/shared/widgets/custom_text_field.dart';
 import 'package:phone_management_system_admin/shared/styles/app_style.dart';
 import 'package:phone_management_system_admin/shared/widgets/reusable_text.dart';
 import 'package:phone_management_system_admin/features/inventory/logic/supplier_controller.dart';
+import 'package:phone_management_system_admin/features/inventory/domain/models/supplier_model.dart';
 
-class CreateSupplierBottomSheet extends StatefulWidget {
-  const CreateSupplierBottomSheet({super.key});
+class SupplierFormBottomSheet extends StatefulWidget {
+  final SupplierModel? supplier; // null = create, not null = update
+
+  const SupplierFormBottomSheet({super.key, this.supplier});
+
+  bool get isEdit => supplier != null;
 
   @override
-  State<CreateSupplierBottomSheet> createState() =>
-      _CreateSupplierBottomSheetState();
+  State<SupplierFormBottomSheet> createState() =>
+      _SupplierFormBottomSheetState();
 }
 
-class _CreateSupplierBottomSheetState extends State<CreateSupplierBottomSheet> {
+class _SupplierFormBottomSheetState extends State<SupplierFormBottomSheet> {
   final _formKey = GlobalKey<FormState>();
 
   final _nameCtrl = TextEditingController();
@@ -27,6 +33,7 @@ class _CreateSupplierBottomSheetState extends State<CreateSupplierBottomSheet> {
   final _notesCtrl = TextEditingController();
 
   bool _loading = false;
+  bool _isActive = true; // Only used in edit mode
 
   late final SupplierController _supCtrl;
 
@@ -34,6 +41,17 @@ class _CreateSupplierBottomSheetState extends State<CreateSupplierBottomSheet> {
   void initState() {
     super.initState();
     _supCtrl = Get.find<SupplierController>();
+
+    if (widget.isEdit) {
+      final s = widget.supplier!;
+      _nameCtrl.text = s.name ?? "";
+      _contactCtrl.text = s.contactName ?? "";
+      _phoneCtrl.text = s.phone ?? "";
+      _emailCtrl.text = s.email ?? "";
+      _addressCtrl.text = s.address ?? "";
+      _notesCtrl.text = s.notes ?? "";
+      _isActive = s.active;
+    }
   }
 
   @override
@@ -60,12 +78,36 @@ class _CreateSupplierBottomSheetState extends State<CreateSupplierBottomSheet> {
         "email": _emailCtrl.text.trim(),
         "address": _addressCtrl.text.trim(),
         "notes": _notesCtrl.text.trim(),
-        // active = true by default (your backend)
-        "active": true,
+        "active": widget.supplier == null ? true : _isActive,
       };
 
-      await _supCtrl.createSupplier(payload);
-      Get.back(); // close bottom sheet
+      SupplierModel? result;
+
+      if (widget.supplier == null) {
+        result = await _supCtrl.createSupplier(payload);
+      } else {
+        result = await _supCtrl.updateSupplier(widget.supplier!.id!, payload);
+      }
+
+      if (result == null) {
+        AppSnackbar.error(
+          title: "Error",
+          message: widget.supplier == null
+              ? "Failed to create supplier"
+              : "Failed to update supplier",
+        );
+        return;
+      }
+
+      AppSnackbar.success(
+        title: widget.supplier == null ? "Created" : "Updated",
+        message: widget.supplier == null
+            ? "Supplier created successfully"
+            : "Supplier updated successfully",
+      );
+
+      if (!mounted) return;
+      Navigator.pop(context, result);
     } catch (e) {
       Get.snackbar("Error", e.toString());
     } finally {
@@ -82,8 +124,8 @@ class _CreateSupplierBottomSheetState extends State<CreateSupplierBottomSheet> {
         padding: EdgeInsets.only(
           left: 12.w,
           right: 12.w,
-          top: 8.h,
           bottom: bottomInset,
+          top: 8.h,
         ),
         child: SizedBox(
           height: MediaQuery.of(context).size.height * 0.75,
@@ -100,7 +142,7 @@ class _CreateSupplierBottomSheetState extends State<CreateSupplierBottomSheet> {
               ),
               SizedBox(height: 8.h),
               ReusableText(
-                text: "Add Supplier",
+                text: widget.isEdit ? "Edit Supplier" : "Add Supplier",
                 style: appStyle(16, AppColors.kDark, FontWeight.w600),
               ),
               const Divider(height: 20),
@@ -113,7 +155,6 @@ class _CreateSupplierBottomSheetState extends State<CreateSupplierBottomSheet> {
                         CustomTextField(
                           controller: _nameCtrl,
                           label: "Supplier Name *",
-                          hintText: "e.g. Kim Phones",
                           validator: (v) => v == null || v.trim().isEmpty
                               ? "Name is required"
                               : null,
@@ -122,36 +163,67 @@ class _CreateSupplierBottomSheetState extends State<CreateSupplierBottomSheet> {
                         CustomTextField(
                           controller: _contactCtrl,
                           label: "Contact Name",
-                          hintText: "Person in charge",
                         ),
                         SizedBox(height: 10.h),
                         CustomTextField(
                           controller: _phoneCtrl,
                           label: "Phone",
-                          hintText: "e.g. 098 123 456",
                           keyboardType: TextInputType.phone,
                         ),
                         SizedBox(height: 10.h),
                         CustomTextField(
                           controller: _emailCtrl,
                           label: "Email",
-                          hintText: "example@email.com",
                           keyboardType: TextInputType.emailAddress,
                         ),
                         SizedBox(height: 10.h),
                         CustomTextField(
                           controller: _addressCtrl,
                           label: "Address",
-                          hintText: "Street, City",
                           maxLines: 2,
                         ),
                         SizedBox(height: 10.h),
                         CustomTextField(
                           controller: _notesCtrl,
                           label: "Notes",
-                          hintText: "Optional notes",
                           maxLines: 3,
                         ),
+
+                        /// ACTIVE / INACTIVE TOGGLE
+                        if (widget.isEdit) ...[
+                          SizedBox(height: 20.h),
+                          Container(
+                            padding: EdgeInsets.all(12.w),
+                            decoration: BoxDecoration(
+                              color: AppColors.kWhite,
+                              borderRadius: BorderRadius.circular(12.r),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color.fromRGBO(0, 0, 0, 0.05),
+                                  blurRadius: 6,
+                                  offset: Offset(0, 2),
+                                )
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                ReusableText(
+                                  text: "Status",
+                                  style: appStyle(
+                                      14, AppColors.kDark, FontWeight.w600),
+                                ),
+                                Switch(
+                                  value: _isActive,
+                                  activeColor: AppColors.kPrimary,
+                                  onChanged: (v) {
+                                    setState(() => _isActive = v);
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                         SizedBox(height: 20.h),
                       ],
                     ),
@@ -187,11 +259,15 @@ class _CreateSupplierBottomSheetState extends State<CreateSupplierBottomSheet> {
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 color: Colors.white,
-                              ))
+                              ),
+                            )
                           : ReusableText(
-                              text: "Create",
+                              text: widget.isEdit ? "Update" : "Create",
                               style: appStyle(
-                                  14, AppColors.kWhite, FontWeight.w500),
+                                14,
+                                AppColors.kWhite,
+                                FontWeight.w500,
+                              ),
                             ),
                     ),
                   ),

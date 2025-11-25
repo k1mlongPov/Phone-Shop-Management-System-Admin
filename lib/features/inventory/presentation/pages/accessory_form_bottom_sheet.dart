@@ -1,13 +1,9 @@
-import 'dart:convert';
-
-import 'package:dio/dio.dart' as dio;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import 'package:phone_management_system_admin/core/services/api_service.dart';
 import 'package:phone_management_system_admin/core/theme/app_colors.dart';
 import 'package:phone_management_system_admin/features/inventory/domain/models/accessory_model.dart';
 import 'package:phone_management_system_admin/features/inventory/logic/accessory_controller.dart';
@@ -62,7 +58,6 @@ class _AccessoryFormBottomSheetState extends State<AccessoryFormBottomSheet> {
   bool _isSubmitting = false;
   late final bool _isEdit;
 
-  late final ApiService _api;
   late final AccessoryController _accessoryCtrl;
   late final CategoryController _catCtrl;
   late final SubCategoryController _subCtrl;
@@ -72,7 +67,6 @@ class _AccessoryFormBottomSheetState extends State<AccessoryFormBottomSheet> {
   void initState() {
     super.initState();
 
-    _api = Get.find<ApiService>();
     _accessoryCtrl = Get.find<AccessoryController>();
     _catCtrl = Get.find<CategoryController>();
     _subCtrl = Get.find<SubCategoryController>();
@@ -313,9 +307,7 @@ class _AccessoryFormBottomSheetState extends State<AccessoryFormBottomSheet> {
     );
   }
 
-  // --------------------------------------------------
   //  IMAGE PICKING
-  // --------------------------------------------------
   Future<bool> requestPhotoPermission() async {
     if (await Permission.photos.isGranted ||
         await Permission.photos.request().isGranted) return true;
@@ -337,71 +329,29 @@ class _AccessoryFormBottomSheetState extends State<AccessoryFormBottomSheet> {
     if (imgs.isNotEmpty) pickedImages.addAll(imgs);
   }
 
-  // --------------------------------------------------
   //  SUBMIT
-  // --------------------------------------------------
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSubmitting = true);
 
     try {
-      final form = dio.FormData();
+      // BUILD INPUT MAP
+      final name = _nameCtrl.text.trim();
+      final type = _typeCtrl.text.trim();
+      final brand =
+          _brandCtrl.text.trim().isNotEmpty ? _brandCtrl.text.trim() : null;
 
-      // Basic fields
-      form.fields.addAll([
-        MapEntry('name', _nameCtrl.text.trim()),
-        MapEntry('type', _typeCtrl.text.trim()),
-      ]);
+      final purchasePrice = double.tryParse(_purchaseCtrl.text.trim()) ?? 0.0;
+      final sellingPrice = double.tryParse(_sellingCtrl.text.trim()) ?? 0.0;
 
-      if (_brandCtrl.text.trim().isNotEmpty) {
-        form.fields.add(MapEntry('brand', _brandCtrl.text.trim()));
-      }
+      final stock = int.tryParse(_stockCtrl.text.trim()) ?? 0;
+      final lowStockThreshold = int.tryParse(_lowStockCtrl.text.trim()) ?? 10;
 
-      form.fields.addAll([
-        MapEntry(
-          'pricing[purchasePrice]',
-          _purchaseCtrl.text.trim().isEmpty ? '0' : _purchaseCtrl.text.trim(),
-        ),
-        MapEntry(
-          'pricing[sellingPrice]',
-          _sellingCtrl.text.trim().isEmpty ? '0' : _sellingCtrl.text.trim(),
-        ),
-        MapEntry('currency', _currency),
-      ]);
+      final categoryId = _selectedCategoryId ?? "";
+      final supplierId = _selectedSupplierId ?? "";
 
-      if (_selectedCategoryId != null && _selectedCategoryId!.isNotEmpty) {
-        form.fields.add(MapEntry('category', _selectedCategoryId!));
-      }
-      if (_selectedSupplierId != null && _selectedSupplierId!.isNotEmpty) {
-        form.fields.add(MapEntry('supplier', _selectedSupplierId!));
-      }
-
-      // Stock
-      if (_stockCtrl.text.trim().isNotEmpty) {
-        form.fields.add(MapEntry('stock', _stockCtrl.text.trim()));
-      }
-      if (_lowStockCtrl.text.trim().isNotEmpty) {
-        form.fields
-            .add(MapEntry('lowStockThreshold', _lowStockCtrl.text.trim()));
-      }
-
-      // Compatibility (as JSON string)
-      final compatText = _compatibilityCtrl.text.trim();
-      if (compatText.isNotEmpty) {
-        final comps = compatText
-            .split(',')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty)
-            .toList();
-        if (comps.isNotEmpty) {
-          form.fields.add(
-            MapEntry('compatibility', jsonEncode(comps)),
-          );
-        }
-      }
-
-      // Attributes (as JSON string)
+      // ATTRIBUTES
       final Map<String, dynamic> attributes = {};
       for (final row in _attributes) {
         final k = row.keyCtrl.text.trim();
@@ -410,58 +360,87 @@ class _AccessoryFormBottomSheetState extends State<AccessoryFormBottomSheet> {
           attributes[k] = v;
         }
       }
-      if (attributes.isNotEmpty) {
-        form.fields.add(
-          MapEntry('attributes', jsonEncode(attributes)),
-        );
+
+      // COMPATIBILITY
+      List<String>? compatibility;
+      if (_compatibilityCtrl.text.trim().isNotEmpty) {
+        compatibility = _compatibilityCtrl.text
+            .trim()
+            .split(',')
+            .map((x) => x.trim())
+            .where((x) => x.isNotEmpty)
+            .toList();
       }
 
-      // New images
-      for (final x in pickedImages) {
-        final file = await dio.MultipartFile.fromFile(
-          x.path,
-          filename: x.name,
-        );
-        form.files.add(MapEntry('images', file));
-      }
+      // CONTROLLER CALL
+      bool ok = false;
 
-      // Call backend
-      dio.Response res;
       if (_isEdit && widget.accessory?.id != null) {
-        res = await _api.put('/api/accessories/${widget.accessory!.id}', form);
+        ok = await _accessoryCtrl.updateAccessory(
+          widget.accessory!.id!,
+          name: name,
+          type: type,
+          brand: brand,
+          purchasePrice: purchasePrice,
+          sellingPrice: sellingPrice,
+          currency: _currency,
+          categoryId: categoryId,
+          supplierId: supplierId,
+          attributes: attributes.isNotEmpty ? attributes : null,
+          compatibility: compatibility,
+          imagePaths: pickedImages.isEmpty
+              ? null
+              : pickedImages.map((f) => f.path).toList(),
+          stock: stock,
+          lowStockThreshold: lowStockThreshold,
+        );
       } else {
-        res = await _api.post('/api/accessories', form);
+        ok = await _accessoryCtrl.createAccessory(
+          name: name,
+          type: type,
+          brand: brand,
+          purchasePrice: purchasePrice,
+          sellingPrice: sellingPrice,
+          currency: _currency,
+          categoryId: categoryId,
+          supplierId: supplierId,
+          attributes: attributes.isNotEmpty ? attributes : null,
+          compatibility: compatibility,
+          imagePaths: pickedImages.isEmpty
+              ? null
+              : pickedImages.map((f) => f.path).toList(),
+          stock: stock,
+          lowStockThreshold: lowStockThreshold,
+        );
       }
 
-      final data = res.data;
-      final bool success =
-          (data is Map && (data['success'] == true || data['status'] == true));
-
-      if (!success) {
+      // RESULT
+      if (!ok) {
         AppSnackbar.error(
-          title: 'Error',
+          title: "Error",
           message: _isEdit
-              ? 'Failed to update accessory'
-              : 'Failed to create accessory',
+              ? "Failed to update accessory"
+              : "Failed to create accessory",
         );
-      } else {
-        AppSnackbar.success(
-          title: _isEdit ? 'Updated' : 'Created',
-          message: _isEdit
-              ? 'Accessory updated successfully'
-              : 'Accessory created successfully',
-        );
-
-        if (!mounted) return;
-        Navigator.of(context).pop();
-
-        Future.delayed(const Duration(milliseconds: 200), () {
-          _accessoryCtrl.fetchAccessories(reset: true);
-        });
+        return;
       }
+
+      AppSnackbar.success(
+        title: _isEdit ? "Updated" : "Created",
+        message: _isEdit
+            ? "Accessory updated successfully"
+            : "Accessory created successfully",
+      );
+
+      if (!mounted) return;
+      Navigator.of(context).pop();
+
+      Future.delayed(const Duration(milliseconds: 200), () {
+        _accessoryCtrl.fetchAccessories(reset: true);
+      });
     } catch (e, st) {
-      print('AccessoryFormBottomSheet submit error: $e\n$st');
-      Get.snackbar('Error', e.toString());
+      print("Accessory submit error: $e\n$st");
+      Get.snackbar("Error", e.toString());
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }

@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:phone_management_system_admin/features/inventory/presentation/widgets/supplier_widgets/supplier_shimmer.dart';
 
 import 'package:phone_management_system_admin/core/theme/app_colors.dart';
-import 'package:phone_management_system_admin/features/inventory/presentation/pages/create_supplier_button_sheet.dart';
+import 'package:phone_management_system_admin/features/inventory/presentation/pages/supplier_form_bottom_sheet.dart';
 import 'package:phone_management_system_admin/features/inventory/presentation/pages/supplier_detail_page.dart';
 import 'package:phone_management_system_admin/shared/constants/app_size.dart';
 import 'package:phone_management_system_admin/shared/styles/app_style.dart';
@@ -17,15 +17,16 @@ class SupplierPage extends StatelessWidget {
   SupplierPage({super.key});
 
   final SupplierController controller = Get.find<SupplierController>();
-  void openCreateSupplierSheet(BuildContext context) {
-    showModalBottomSheet(
+  Future<void> openCreateSupplierSheet(BuildContext context,
+      {SupplierModel? supplier}) {
+    return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (_) => const CreateSupplierBottomSheet(),
+      builder: (_) => const SupplierFormBottomSheet(),
       sheetAnimationStyle: AnimationStyle(
         duration: const Duration(milliseconds: 1500),
         reverseDuration: const Duration(milliseconds: 800),
@@ -106,9 +107,6 @@ class SupplierPage extends StatelessWidget {
     );
   }
 
-  // ---------------------------------------------------
-  // SUMMARY CARD
-  // ---------------------------------------------------
   Widget _buildSummaryCard({
     required int count,
     required String lastUpdated,

@@ -1,42 +1,85 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:get/get.dart';
 import 'package:phone_management_system_admin/core/theme/app_colors.dart';
 import 'package:phone_management_system_admin/features/inventory/domain/models/category_model.dart';
+import 'package:phone_management_system_admin/features/inventory/logic/category_controller.dart';
+import 'package:phone_management_system_admin/features/inventory/logic/subcategory_controller.dart';
+import 'package:phone_management_system_admin/features/inventory/presentation/pages/category_form_bottom_sheet.dart';
 import 'package:phone_management_system_admin/shared/constants/app_size.dart';
 import 'package:phone_management_system_admin/shared/styles/app_style.dart';
+import 'package:phone_management_system_admin/shared/widgets/app_snackbar.dart';
+import 'package:phone_management_system_admin/shared/widgets/confirm_dialog.dart';
 import 'package:phone_management_system_admin/shared/widgets/reusable_text.dart';
 
 class SubcategoryTile extends StatelessWidget {
   final CategoryModel category;
   final String parentId;
-  final void Function(CategoryModel cat) onEdit;
-  final void Function(BuildContext ctx, CategoryModel cat, String parentId)
-      onDelete;
+
+  Future<void> openCreateCategorySheet(
+    BuildContext context, {
+    CategoryModel? category,
+  }) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => CategoryFormBottomSheet(category: category),
+      sheetAnimationStyle: AnimationStyle(
+        duration: const Duration(milliseconds: 1500),
+        reverseDuration: const Duration(milliseconds: 800),
+        curve: Curves.easeOutBack,
+      ),
+    );
+  }
 
   const SubcategoryTile({
     super.key,
     required this.category,
     required this.parentId,
-    required this.onEdit,
-    required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
+    final catCtrl = Get.find<CategoryController>();
+    final subCtrl = Get.find<SubCategoryController>();
     return Slidable(
       key: ValueKey(category.id),
       endActionPane: ActionPane(
         motion: const DrawerMotion(),
         children: [
           SlidableAction(
-            onPressed: (_) => onEdit(category),
+            onPressed: (_) =>
+                openCreateCategorySheet(context, category: category),
             backgroundColor: Colors.blue,
             foregroundColor: Colors.white,
             icon: Icons.edit,
           ),
           SlidableAction(
-            onPressed: (_) => onDelete(context, category, parentId),
+            onPressed: (_) async {
+              final yes = await showConfirmDialog(
+                title: "Delete Phone",
+                message:
+                    "Are you sure you want to delete this phone? This action cannot be undone.",
+                confirmText: "Delete",
+                confirmColor: Colors.red,
+              );
+              await catCtrl.deleteCategory(category.id!);
+
+              await subCtrl.refetchSubcategories(parentId);
+
+              if (yes) {
+                AppSnackbar.success(
+                  title: 'Success',
+                  message: 'Deleted phone successfully',
+                );
+              }
+              if (!yes) return;
+            },
             backgroundColor: Colors.red,
             foregroundColor: Colors.white,
             icon: Icons.delete,
@@ -65,9 +108,9 @@ class SubcategoryTile extends StatelessWidget {
           child: ListTile(
             leading: Image.network(
               category.image ?? "",
-              width: 40.w,
+              width: 60.w,
               height: 40.h,
-              fit: BoxFit.cover,
+              fit: BoxFit.contain,
               errorBuilder: (_, __, ___) =>
                   Icon(Icons.broken_image, size: 40.r),
             ),

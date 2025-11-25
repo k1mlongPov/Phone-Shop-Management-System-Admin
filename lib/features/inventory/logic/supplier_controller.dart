@@ -37,50 +37,50 @@ class SupplierController extends GetxController {
     }
   }
 
-  // ---------------- CREATE -----------------
-
-  Future<void> createSupplier(Map<String, dynamic> payload) async {
+  Future<SupplierModel?> createSupplier(Map<String, dynamic> payload) async {
     try {
-      isLoading.value = true;
-
       final created = await repository.create(payload);
       suppliers.add(created);
-
-      Get.snackbar('Success', 'Supplier created successfully');
+      return created;
     } catch (e) {
-      Get.snackbar('Create failed', e.toString());
-    } finally {
-      isLoading.value = false;
+      Get.snackbar("Error", e.toString());
+      return null;
     }
   }
-  // ---------------- UPDATE -----------------
 
-  Future<bool> updateSupplier(String id, Map<String, dynamic> payload) async {
+  Future<SupplierModel?> updateSupplier(
+      String id, Map<String, dynamic> payload) async {
     try {
       final updated = await repository.updateSupplier(id, payload);
 
       final index = suppliers.indexWhere((s) => s.id == id);
-      if (index != -1) suppliers[index] = updated;
+      if (index != -1) {
+        suppliers[index] = updated;
+        suppliers.refresh();
+      }
 
-      Get.snackbar('Success', 'Supplier updated');
-      return true;
+      return updated;
     } catch (e) {
-      Get.snackbar('Error', e.toString());
-      return false;
+      Get.snackbar("Error", e.toString());
+      return null;
     }
   }
 
-  // ---------------- DELETE -----------------
+  void updateLocal(SupplierModel updated) {
+    final idx = suppliers.indexWhere((x) => x.id == updated.id);
+    if (idx != -1) suppliers[idx] = updated;
+  }
 
   Future<bool> deleteSupplier(String id) async {
     try {
-      await repository.deleteSupplier(id);
-
-      suppliers.removeWhere((s) => s.id == id);
-      Get.snackbar('Deleted', 'Supplier removed');
-      return true;
+      final ok = await repository.deleteSupplier(id);
+      if (ok) {
+        suppliers.removeWhere((s) => s.id == id);
+        suppliers.refresh();
+      }
+      return ok;
     } catch (e) {
-      Get.snackbar('Error', e.toString());
+      Get.snackbar("Error", e.toString());
       return false;
     }
   }

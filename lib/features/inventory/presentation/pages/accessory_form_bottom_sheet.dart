@@ -439,7 +439,7 @@ class _AccessoryFormBottomSheetState extends State<AccessoryFormBottomSheet> {
         _accessoryCtrl.fetchAccessories(reset: true);
       });
     } catch (e, st) {
-      print("Accessory submit error: $e\n$st");
+      debugPrint("Accessory submit error: $e\n$st");
       Get.snackbar("Error", e.toString());
     } finally {
       if (mounted) setState(() => _isSubmitting = false);

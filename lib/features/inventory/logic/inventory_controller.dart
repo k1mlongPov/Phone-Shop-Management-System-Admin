@@ -1,18 +1,25 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:phone_management_system_admin/features/inventory/domain/models/phone_model.dart';
-import 'package:phone_management_system_admin/features/inventory/logic/phone_controller.dart';
 
-class InventoryController extends GetxController {
-  final PhoneController phoneCtrl = Get.find<PhoneController>();
-
-  /// current selected tab index
+class InventoryController extends GetxController
+    with GetSingleTickerProviderStateMixin {
   final selectedIndex = 0.obs;
 
-  Future<Phone?> fetchPhoneById(String id) {
-    return phoneCtrl.fetchPhoneById(id, updateList: true);
+  late TabController tabController;
+
+  @override
+  void onInit() {
+    super.onInit();
+
+    tabController = TabController(length: 4, vsync: this);
+
+    tabController.addListener(() {
+      selectedIndex.value = tabController.index;
+    });
   }
 
   void changeTab(int index) {
+    tabController.animateTo(index);
     selectedIndex.value = index;
   }
 }

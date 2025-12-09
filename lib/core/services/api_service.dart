@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart' as dio;
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:phone_management_system_admin/core/routes/app_routes.dart';
 import 'package:phone_management_system_admin/core/services/local_storage_service.dart';
 import 'package:get/get.dart';
@@ -31,15 +32,10 @@ class ApiService {
           return handler.next(options);
         },
         onError: (err, handler) async {
-          print(
-              '*** API ERR <-- ${err.response?.statusCode} ${err.requestOptions.uri}');
-
-          // ====== CHECK FOR TOKEN EXPIRED ======
           if (err.response?.statusCode == 401) {
             final refreshed = await _refreshAccessToken();
 
             if (refreshed) {
-              // Retry request with new token
               final newAccessToken = storage.getAuthToken();
 
               final cloneRequest = await dioClient.request(
@@ -86,7 +82,7 @@ class ApiService {
       await storage.saveAuthToken(newAccessToken);
       return true;
     } catch (e) {
-      print("Refresh failed: $e");
+      debugPrint("Refresh failed: $e");
       return false;
     }
   }

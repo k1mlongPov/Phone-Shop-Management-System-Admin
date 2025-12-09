@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:phone_management_system_admin/core/services/api_service.dart';
 import 'package:phone_management_system_admin/core/services/local_storage_service.dart';
-import 'package:phone_management_system_admin/features/auth/domain/models/user_model.dart';
+import 'package:phone_management_system_admin/features/users/domains/user_model.dart';
 
 class AuthRepository {
   final ApiService api;

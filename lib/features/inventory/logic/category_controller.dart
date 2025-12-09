@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart' as dio;
 
@@ -89,7 +90,7 @@ class CategoryController extends GetxController {
       }
     } catch (e, st) {
       error.value = e.toString();
-      print("CategoryController.fetchCategories ERROR: $e\n$st");
+      debugPrint("CategoryController.fetchCategories ERROR: $e\n$st");
     } finally {
       isLoading.value = false;
       isLoadingMore.value = false;
@@ -105,7 +106,7 @@ class CategoryController extends GetxController {
       rootCategories.assignAll(data);
     } catch (e, st) {
       errorInternal.value = e.toString();
-      print('CategoryController.loadRootCategories ERROR: $e\n$st');
+      debugPrint('CategoryController.loadRootCategories ERROR: $e\n$st');
     } finally {
       isLoadingRoot.value = false;
     }
@@ -129,7 +130,7 @@ class CategoryController extends GetxController {
       }
     } catch (e, st) {
       errorInternal.value = e.toString();
-      print('fetchTopLevelParents error: $e\n$st');
+      debugPrint('fetchTopLevelParents error: $e\n$st');
     } finally {
       isLoadingRoot.value = false;
     }
@@ -193,7 +194,7 @@ class CategoryController extends GetxController {
       errorInternal.value = null;
     } catch (e, st) {
       errorInternal.value = e.toString();
-      print('fetchSubcategoriesByParentId error: $e\n$st');
+      debugPrint('fetchSubcategoriesByParentId error: $e\n$st');
     } finally {
       isLoadingSub.value = false;
     }
@@ -251,7 +252,7 @@ class CategoryController extends GetxController {
           reset: reset);
     } catch (e, st) {
       errorInternal.value = e.toString();
-      print('fetchSubcategoriesByParentName error: $e\n$st');
+      debugPrint('fetchSubcategoriesByParentName error: $e\n$st');
     } finally {
       isLoadingSub.value = false;
     }
@@ -303,7 +304,7 @@ class CategoryController extends GetxController {
         } catch (_) {}
       }
     } catch (e, st) {
-      print('createCategoryWithImage ERROR: $e\n$st');
+      debugPrint('createCategoryWithImage ERROR: $e\n$st');
       Get.snackbar("Error", e.toString());
     }
   }
@@ -376,7 +377,7 @@ class CategoryController extends GetxController {
           await repository.getRootCategories(); // or your paginated endpoint
       rootCategories.addAll(data);
     } catch (e) {
-      print('CategoryController.loadMore ERROR: $e');
+      debugPrint('CategoryController.loadMore ERROR: $e');
       errorInternal.value = e.toString();
     } finally {
       isLoadingMoreInternal.value = false;

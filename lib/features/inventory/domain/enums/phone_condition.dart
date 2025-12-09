@@ -31,11 +31,11 @@ extension PhoneConditionX on PhoneCondition {
   String get label {
     switch (this) {
       case PhoneCondition.usedLocal:
-        return 'Used (Customer)';
+        return 'Used';
       case PhoneCondition.newCompany:
-        return 'New (Company)';
+        return 'New';
       case PhoneCondition.newImport:
-        return 'New (Imported)';
+        return 'Imported';
     }
   }
 }

@@ -6,7 +6,7 @@ import 'package:phone_management_system_admin/core/theme/app_colors.dart';
 import 'package:phone_management_system_admin/features/customers/presentation/pages/customers_page.dart';
 import 'package:phone_management_system_admin/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:phone_management_system_admin/features/inventory/presentation/pages/inventory_page.dart';
-import 'package:phone_management_system_admin/features/orders/presentation/pages/orders_page.dart';
+import 'package:phone_management_system_admin/features/sales/presentation/pages/sales_page.dart';
 import 'package:phone_management_system_admin/features/settings/presentation/pages/settings_page.dart';
 import 'package:phone_management_system_admin/shared/styles/app_style.dart';
 
@@ -34,7 +34,7 @@ class _BottomNavPageState extends State<BottomNavPage> {
     _pages = [
       DashboardPage(key: _dashboardKey),
       InventoryPage(key: _inventoryKey),
-      OrdersPage(key: _ordersKey),
+      SalePage(key: _ordersKey),
       CustomersPage(key: _customersKey),
       SettingsPage(key: _settingsKey),
     ];
@@ -42,10 +42,10 @@ class _BottomNavPageState extends State<BottomNavPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.kWhite,
-      body: SafeArea(
-        child: Obx(
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: AppColors.kBg,
+        body: Obx(
           () {
             final idx = _navC.currentIndex.value;
             return PageStorage(
@@ -57,74 +57,74 @@ class _BottomNavPageState extends State<BottomNavPage> {
             );
           },
         ),
-      ),
-      bottomNavigationBar: Obx(
-        () {
-          final index = _navC.currentIndex.value;
-          return Container(
-            decoration: BoxDecoration(
-              color: AppColors.kWhite,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
-                  offset: const Offset(0, -2),
-                  blurRadius: 8,
-                ),
-              ],
-            ),
-            child: BottomNavigationBar(
-              currentIndex: index,
-              onTap: (i) {
-                _navC.changeIndex(i);
-                if (i == 2) _navC.clearOrdersBadge();
-              },
-              type: BottomNavigationBarType.fixed,
-              selectedItemColor: AppColors.kWhite,
-              unselectedItemColor: AppColors.kWhite.withOpacity(.4),
-              showUnselectedLabels: true,
-              backgroundColor: AppColors.kPrimary,
-              selectedLabelStyle: appStyle(
-                12,
-                AppColors.kWhite,
-                FontWeight.w600,
+        bottomNavigationBar: Obx(
+          () {
+            final index = _navC.currentIndex.value;
+            return Container(
+              decoration: BoxDecoration(
+                color: AppColors.kWhite,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    offset: const Offset(0, -2),
+                    blurRadius: 8,
+                  ),
+                ],
               ),
-              unselectedLabelStyle: appStyle(
-                12,
-                AppColors.kWhite.withOpacity(.6),
-                FontWeight.w600,
+              child: BottomNavigationBar(
+                currentIndex: index,
+                onTap: (i) {
+                  _navC.changeIndex(i);
+                  if (i == 2) _navC.clearOrdersBadge();
+                },
+                type: BottomNavigationBarType.fixed,
+                selectedItemColor: AppColors.kWhite,
+                unselectedItemColor: AppColors.kWhite.withOpacity(.4),
+                showUnselectedLabels: true,
+                backgroundColor: AppColors.kPrimary,
+                selectedLabelStyle: appStyle(
+                  12,
+                  AppColors.kWhite,
+                  FontWeight.w600,
+                ),
+                unselectedLabelStyle: appStyle(
+                  12,
+                  AppColors.kWhite.withOpacity(.6),
+                  FontWeight.w600,
+                ),
+                elevation: 0,
+                items: [
+                  _buildItem(
+                    icon: Icons.dashboard_outlined,
+                    label: 'Dashboard',
+                    activeIcon: Icons.dashboard,
+                  ),
+                  _buildItem(
+                    icon: Icons.inventory_2_outlined,
+                    label: 'Inventory',
+                    activeIcon: Icons.inventory_2,
+                  ),
+                  _buildItemWithBadge(
+                    icon: Icons.receipt_long_outlined,
+                    label: 'Sales',
+                    activeIcon: Icons.receipt_long,
+                    badgeCount: _navC.ordersBadgeCount.value,
+                  ),
+                  _buildItem(
+                    icon: Icons.person_search_outlined,
+                    label: 'Customers',
+                    activeIcon: Icons.person_search,
+                  ),
+                  _buildItem(
+                    icon: Icons.settings_outlined,
+                    label: 'Settings',
+                    activeIcon: Icons.settings,
+                  ),
+                ],
               ),
-              elevation: 0,
-              items: [
-                _buildItem(
-                  icon: Icons.dashboard_outlined,
-                  label: 'Dashboard',
-                  activeIcon: Icons.dashboard,
-                ),
-                _buildItem(
-                  icon: Icons.inventory_2_outlined,
-                  label: 'Inventory',
-                  activeIcon: Icons.inventory_2,
-                ),
-                _buildItemWithBadge(
-                  icon: Icons.receipt_long_outlined,
-                  label: 'Orders',
-                  activeIcon: Icons.receipt_long,
-                  badgeCount: _navC.ordersBadgeCount.value,
-                ),
-                _buildItem(
-                  icon: Icons.person_search_outlined,
-                  label: 'Customers',
-                  activeIcon: Icons.person_search,
-                ),
-                _buildItem(
-                  icon: Icons.settings_outlined,
-                  label: 'Settings',
-                  activeIcon: Icons.settings,
-                ),
-              ],
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

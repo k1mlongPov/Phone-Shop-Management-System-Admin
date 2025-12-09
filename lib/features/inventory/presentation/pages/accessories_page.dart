@@ -7,13 +7,10 @@ import 'package:phone_management_system_admin/features/inventory/domain/models/a
 import 'package:phone_management_system_admin/features/inventory/logic/accessory_controller.dart';
 import 'package:phone_management_system_admin/features/inventory/logic/category_controller.dart';
 import 'package:phone_management_system_admin/features/inventory/logic/subcategory_controller.dart';
-import 'package:phone_management_system_admin/features/inventory/presentation/pages/accessory_form_bottom_sheet.dart';
 import 'package:phone_management_system_admin/features/inventory/presentation/widgets/accessory_widgets/accessory_tile.dart';
 import 'package:phone_management_system_admin/features/inventory/presentation/widgets/category_filter_widget.dart';
 import 'package:phone_management_system_admin/features/inventory/presentation/widgets/product_shimmer.dart';
 import 'package:phone_management_system_admin/features/inventory/presentation/widgets/search_and_filter_widget.dart';
-import 'package:phone_management_system_admin/shared/styles/app_style.dart';
-import 'package:phone_management_system_admin/shared/widgets/reusable_text.dart';
 
 class AccessoryPage extends StatelessWidget {
   AccessoryPage({super.key});
@@ -31,26 +28,8 @@ class AccessoryPage extends StatelessWidget {
     AccessorySortField.stock: 'Stock',
   };
 
-  void openCreateAccessorySheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (_) => const AccessoryFormBottomSheet(),
-      sheetAnimationStyle: AnimationStyle(
-        duration: const Duration(milliseconds: 1500),
-        reverseDuration: const Duration(milliseconds: 800),
-        curve: Curves.easeOutBack,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    // Prefetch subcategories for accessories if needed
     if (subCtrl.subcategoriesByParent.isEmpty && !subCtrl.isLoading.value) {
       Future.microtask(() => subCtrl.fetchForType('accessory'));
     }
@@ -76,34 +55,6 @@ class AccessoryPage extends StatelessWidget {
             onSetCategory: (id) => accessoryCtrl.setCategoryFilter(id),
           ),
 
-          SizedBox(height: 12.h),
-          GestureDetector(
-            onTap: () => openCreateAccessorySheet(context),
-            child: Container(
-              margin: EdgeInsets.only(left: 6.w, top: 10.h),
-              height: 40.h,
-              decoration: BoxDecoration(
-                border: Border.all(width: .6, color: AppColors.kPrimary),
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.add_circle_outline,
-                    color: AppColors.kPrimary,
-                  ),
-                  SizedBox(
-                    width: 8.w,
-                  ),
-                  ReusableText(
-                    text: 'Add new Accessory',
-                    style: appStyle(14, AppColors.kPrimary, FontWeight.normal),
-                  ),
-                ],
-              ),
-            ),
-          ),
           SizedBox(height: 12.h),
           // List section
           Expanded(

@@ -5,7 +5,12 @@ import 'package:intl/intl.dart';
 import 'package:phone_management_system_admin/core/routes/app_routes.dart';
 
 import 'package:phone_management_system_admin/core/theme/app_colors.dart';
+import 'package:phone_management_system_admin/features/inventory/domain/models/accessory_model.dart';
+import 'package:phone_management_system_admin/features/inventory/domain/models/phone_model.dart';
 import 'package:phone_management_system_admin/features/inventory/logic/supplier_controller.dart';
+import 'package:phone_management_system_admin/features/inventory/presentation/pages/accessory_detail_page.dart';
+import 'package:phone_management_system_admin/features/inventory/presentation/pages/phone_detail_page.dart';
+import 'package:phone_management_system_admin/features/inventory/presentation/pages/restock_page.dart';
 import 'package:phone_management_system_admin/features/inventory/presentation/pages/supplier_form_bottom_sheet.dart';
 import 'package:phone_management_system_admin/shared/constants/app_size.dart';
 import 'package:phone_management_system_admin/shared/styles/app_style.dart';
@@ -115,26 +120,31 @@ class SupplierDetailPage extends StatelessWidget {
         final createdStr = _formatDate(supplier.createdAt);
         final updatedStr = _formatDate(supplier.updatedAt);
 
-        return SingleChildScrollView(
-          padding: EdgeInsets.all(12.r),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeaderCard(supplier),
-              SizedBox(height: 12.h),
-              _buildSummaryRow(
-                totalProducts: totalProducts,
-                lastRestock: lastRestock,
-                createdStr: createdStr,
-                updatedStr: updatedStr,
-              ),
-              SizedBox(height: 12.h),
-              _buildContactCard(supplier),
-              SizedBox(height: 12.h),
-              _buildAddressNotesCard(supplier),
-              SizedBox(height: 16.h),
-              _buildSuppliedProductsSection(supplier),
-            ],
+        return RefreshIndicator(
+          onRefresh: supplierCtrl.refresh,
+          backgroundColor: AppColors.kWhite,
+          color: AppColors.kPrimary,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(12.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeaderCard(supplier),
+                SizedBox(height: 12.h),
+                _buildSummaryRow(
+                  totalProducts: totalProducts,
+                  lastRestock: lastRestock,
+                  createdStr: createdStr,
+                  updatedStr: updatedStr,
+                ),
+                SizedBox(height: 12.h),
+                _buildContactCard(supplier),
+                SizedBox(height: 12.h),
+                _buildAddressNotesCard(supplier),
+                SizedBox(height: 16.h),
+                _buildSuppliedProductsSection(supplier),
+              ],
+            ),
           ),
         );
       }),
@@ -447,6 +457,8 @@ class SupplierDetailPage extends StatelessWidget {
 
   Widget _buildSuppliedProductsSection(SupplierModel s) {
     final supplied = s.suppliedProducts ?? [];
+    Phone? p;
+    Accessory? a;
 
     return Container(
       width: AppSize.width,
@@ -465,9 +477,33 @@ class SupplierDetailPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ReusableText(
-            text: 'Supplied products',
-            style: appStyle(14, AppColors.kDark, FontWeight.w600),
+          Row(
+            children: [
+              ReusableText(
+                text: 'Supplied products',
+                style: appStyle(14, AppColors.kDark, FontWeight.w600),
+              ),
+              GestureDetector(
+                onTap: () => Get.to(
+                  () => RestockPage(supplierId: s.id!),
+                  arguments: s,
+                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  child: Row(
+                    children: [
+                      Icon(Icons.add, size: 16.r, color: AppColors.kPrimary),
+                      SizedBox(width: 4.w),
+                      ReusableText(
+                        text: 'Restock',
+                        style:
+                            appStyle(12, AppColors.kPrimary, FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
           SizedBox(height: 8.h),
           if (supplied.isEmpty)
@@ -490,10 +526,7 @@ class SupplierDetailPage extends StatelessWidget {
               itemBuilder: (_, i) {
                 final sp = supplied[i];
                 final type = sp.modelType ?? '-';
-                final productId =
-                    (sp.productId?.length ?? 0) > 8 && sp.productId != null
-                        ? '${sp.productId!.substring(0, 8)}...'
-                        : (sp.productId ?? '-');
+                final productId = sp.productId != null ? sp.productId! : '-';
 
                 String lastRestock = 'N/A';
                 if (sp.lastRestockDate != null &&
@@ -545,7 +578,17 @@ class SupplierDetailPage extends StatelessWidget {
                   ),
                   // Later you can add onTap to navigate to Phone/Accessory detail
                   onTap: () {
-                    // TODO: Navigate to product detail if you add that
+                    Get.to(
+                      () => type.toLowerCase() == 'phone'
+                          ? PhoneDetailPage(
+                              phoneId: productId,
+                              phone: p,
+                            )
+                          : AccessoryDetailPage(
+                              accessoryId: productId,
+                              accessory: a,
+                            ),
+                    );
                   },
                 );
               },

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:phone_management_system_admin/core/routes/app_routes.dart';
 import 'package:phone_management_system_admin/features/auth/logic/auth_controller.dart';
+import 'package:phone_management_system_admin/features/dashboard/presentation/widgets/advanced_shimmer_dashboard.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -42,8 +43,8 @@ class _SplashPageState extends State<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
+    return Scaffold(
+      body: Center(child: advancedShimmerDashboard()),
     );
   }
 }

@@ -106,9 +106,7 @@ class PhoneWidget extends StatelessWidget {
               textColor: AppColors.kDark,
               hasIcon: true,
               imagePath: 'assets/icons/google.png',
-              onTap: () {
-                // TODO: social login
-              },
+              onTap: () {},
             ),
           ],
         ),

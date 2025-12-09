@@ -59,8 +59,6 @@ class _VariantFormData {
 }
 
 class PhoneFormBottomSheet extends StatefulWidget {
-  /// If [phone] is null → create
-  /// If [phone] is not null → edit
   final Phone? phone;
 
   const PhoneFormBottomSheet({super.key, this.phone});

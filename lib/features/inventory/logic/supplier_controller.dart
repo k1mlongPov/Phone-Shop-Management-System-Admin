@@ -21,7 +21,10 @@ class SupplierController extends GetxController {
     fetchSuppliers();
   }
 
-  // ---------------- FETCH -----------------
+  @override
+  Future<void> refresh() async {
+    await fetchSuppliers();
+  }
 
   Future<void> fetchSuppliers() async {
     try {

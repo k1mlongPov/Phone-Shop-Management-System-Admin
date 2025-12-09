@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:phone_management_system_admin/core/services/api_service.dart';
 import 'package:phone_management_system_admin/features/inventory/domain/models/category_model.dart';
 
@@ -77,7 +78,7 @@ class CategoryRepository {
             ? CategoryModel.fromJson(item)
             : CategoryModel.fromJson(Map<String, dynamic>.from(item as Map)));
       } catch (e, st) {
-        print('Subcategory parse error index $i: $e\n$item\n$st');
+        debugPrint('Subcategory parse error index $i: $e\n$item\n$st');
       }
     }
 

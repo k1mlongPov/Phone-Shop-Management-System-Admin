@@ -163,7 +163,7 @@ class AccessoryController extends GetxController {
       error.value = null;
     } catch (e, st) {
       error.value = e.toString();
-      print('AccessoryController.fetchAccessories error: $e\n$st');
+      debugPrint('AccessoryController.fetchAccessories error: $e\n$st');
     } finally {
       isLoading.value = false;
       isLoadingMore.value = false;
@@ -183,7 +183,7 @@ class AccessoryController extends GetxController {
       }
       return acc;
     } catch (e) {
-      print('AccessoryController.fetchAccessoryById error: $e');
+      debugPrint('AccessoryController.fetchAccessoryById error: $e');
       return null;
     } finally {
       isLoading.value = false;
@@ -217,7 +217,7 @@ class AccessoryController extends GetxController {
     List<String>? compatibility,
     List<String>? imagePaths,
     int stock = 0,
-    int lowStockThreshold = 10,
+    int lowStockThreshold = 5,
   }) async {
     try {
       final created = await repository.createAccessory(

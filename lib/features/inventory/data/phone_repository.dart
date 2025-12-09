@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:phone_management_system_admin/core/services/api_service.dart';
 import 'package:phone_management_system_admin/core/services/local_storage_service.dart';
 import 'package:phone_management_system_admin/features/inventory/domain/models/phone_model.dart';
@@ -37,9 +38,6 @@ class PhoneRepository {
       if (categoryId != null && categoryId.isNotEmpty)
         'subcategory': categoryId,
     };
-
-    print("📡 fetchPhones() -> QUERY: $query");
-
     final res = await api.get(
       '/api/phones',
       query: query,
@@ -73,8 +71,9 @@ class PhoneRepository {
       // Flatten pricing
       if (json['pricing'] is Map) {
         final Map pr = Map<String, dynamic>.from(json['pricing']);
-        if (pr['sellingPrice'] != null)
+        if (pr['sellingPrice'] != null) {
           json['sellingPrice'] = pr['sellingPrice'];
+        }
         if (pr['purchasePrice'] != null) {
           json['purchasePrice'] = pr['purchasePrice'];
         }
@@ -143,10 +142,10 @@ class PhoneRepository {
         items.add(Phone.fromJson(normalized));
       } catch (err, st) {
         try {
-          print(
+          debugPrint(
               '⚠️ Phone.fromJson failed at index $i: $err\nRAW: ${jsonEncode(raw)}\n$st');
         } catch (_) {
-          print('⚠️ Phone.fromJson failed & raw unencodable: $raw');
+          debugPrint('⚠️ Phone.fromJson failed & raw unencodable: $raw');
         }
       }
     }

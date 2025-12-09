@@ -9,6 +9,9 @@ abstract class Routes {
   static const DASHBOARD = '/dashboard';
   static const INVENTORY = '/inventory';
   static const PHONE = '/phone';
+  static const PHONE_DETAIL = '/phone_detail';
+  static const ACCESSORY = '/accessory';
+  static const ACCESSORY_DETAIL = '/accessory_detail';
   static const CUSTOMER = '/customer';
   static const ORDER = '/order';
   static const SETTING = '/setting';

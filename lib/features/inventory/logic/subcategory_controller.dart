@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:phone_management_system_admin/features/inventory/domain/enums/category_sort_field.dart';
 import 'package:phone_management_system_admin/features/inventory/logic/category_controller.dart';
@@ -80,7 +81,7 @@ class SubCategoryController extends GetxController {
       subcategoriesByParent.refresh();
     } catch (e, st) {
       error.value = e.toString();
-      print('SubCategoryController.fetchSubcategories ERROR: $e\n$st');
+      debugPrint('SubCategoryController.fetchSubcategories ERROR: $e\n$st');
     } finally {
       isLoading.value = false;
     }

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phone_management_system_admin/core/services/local_storage_service.dart';
@@ -162,7 +163,6 @@ class PhoneController extends GetxController {
       final fetchedPage = resp['page'] as int? ?? page.value;
       final fetchedPages = resp['pages'] as int? ?? 1;
       final fetchedTotal = resp['total'] as int? ?? fetched.length;
-      print('fetchPhones query -> $query');
 
       if (reset) {
         phones.assignAll(fetched);
@@ -176,7 +176,7 @@ class PhoneController extends GetxController {
       error.value = null;
     } catch (e, st) {
       error.value = e.toString();
-      print('PhoneController.fetchPhones error: $e\n$st');
+      debugPrint('PhoneController.fetchPhones error: $e\n$st');
     } finally {
       isLoading.value = false;
       isLoadingMore.value = false;
@@ -208,7 +208,7 @@ class PhoneController extends GetxController {
       return p;
     } catch (e, st) {
       error.value = e.toString();
-      print('fetchPhoneById ERROR: $e\n$st');
+      debugPrint('fetchPhoneById ERROR: $e\n$st');
       return null;
     } finally {
       isLoading.value = false;
@@ -319,7 +319,7 @@ class PhoneController extends GetxController {
       await repository.deletePhone(id);
       removeLocalById(id);
     } catch (e) {
-      print('PhoneController.deletePhone error: $e');
+      debugPrint('PhoneController.deletePhone error: $e');
       rethrow;
     }
   }

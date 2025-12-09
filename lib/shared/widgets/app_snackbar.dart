@@ -5,7 +5,6 @@ import 'package:phone_management_system_admin/shared/styles/app_style.dart';
 import 'package:phone_management_system_admin/shared/widgets/reusable_text.dart';
 
 class AppSnackbar {
-  // Success Snackbar
   static void success({
     required String title,
     required String message,
@@ -28,7 +27,6 @@ class AppSnackbar {
     );
   }
 
-  // Error Snackbar
   static void error({
     required String title,
     required String message,

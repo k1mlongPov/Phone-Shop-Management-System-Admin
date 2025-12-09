@@ -1,5 +1,5 @@
 class AppConfig {
-  static const String apiBaseUrl = "http://192.168.101.179:5000";
+  static const String apiBaseUrl = "https://phone-management-api.onrender.com";
   //http://192.168.101.179:5000
   //https://phone-management-api.onrender.com
 

@@ -2,6 +2,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:phone_management_system_admin/core/services/api_service.dart';
 import 'package:phone_management_system_admin/features/inventory/domain/enums/accessory_sort_field.dart';
 import 'package:phone_management_system_admin/features/inventory/domain/models/accessory_model.dart';
@@ -55,9 +56,7 @@ class AccessoryRepository {
         total = 1;
       }
     } catch (e, st) {
-      print(
-          'AccessoryRepository: response parsing error: $e\n$st\nraw=${res.data}');
-      rawList = <dynamic>[];
+      debugPrint('$e / $st');
     }
 
     final List<Accessory> items = [];
@@ -81,7 +80,7 @@ class AccessoryRepository {
             continue;
           }
         } catch (_) {}
-        print(
+        debugPrint(
             'AccessoryRepository: failed to parse accessory at index $i: $e\nraw=$raw\n$st');
       }
     }

@@ -7,14 +7,20 @@ import 'package:phone_management_system_admin/features/auth/presentation/pages/l
 import 'package:phone_management_system_admin/features/auth/presentation/pages/registration_page.dart';
 import 'package:phone_management_system_admin/features/auth/presentation/pages/splash_page.dart';
 import 'package:phone_management_system_admin/features/auth/presentation/pages/verification_page.dart';
+import 'package:phone_management_system_admin/features/customers/binding/customer_binding.dart';
 import 'package:phone_management_system_admin/features/customers/presentation/pages/customers_page.dart';
-import 'package:phone_management_system_admin/features/dashboard/logic/dashboard_binding.dart';
+import 'package:phone_management_system_admin/features/dashboard/binding/dashboard_binding.dart';
 import 'package:phone_management_system_admin/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:phone_management_system_admin/features/inventory/bindings/inventory_binding.dart';
+import 'package:phone_management_system_admin/features/inventory/presentation/pages/accessories_page.dart';
+import 'package:phone_management_system_admin/features/inventory/presentation/pages/accessory_detail_page.dart';
 import 'package:phone_management_system_admin/features/inventory/presentation/pages/inventory_page.dart';
+import 'package:phone_management_system_admin/features/inventory/presentation/pages/phone_detail_page.dart';
 import 'package:phone_management_system_admin/features/inventory/presentation/pages/phones_page.dart';
-import 'package:phone_management_system_admin/features/orders/presentation/pages/orders_page.dart';
+import 'package:phone_management_system_admin/features/sales/binding/sale_binding.dart';
+import 'package:phone_management_system_admin/features/sales/presentation/pages/sales_page.dart';
 import 'package:phone_management_system_admin/features/settings/presentation/pages/settings_page.dart';
+import 'package:phone_management_system_admin/features/users/binding/user_binding.dart';
 
 class AppPages {
   static const initial = Routes.LOGIN;
@@ -44,7 +50,11 @@ class AppPages {
       page: () => const AppShell(),
       bindings: [
         AppShellBinding(),
+        DashboardBinding(),
         InventoryBinding(),
+        SaleBinding(),
+        CustomerBinding(),
+        UserBinding(),
       ],
     ),
     GetPage(
@@ -54,22 +64,38 @@ class AppPages {
     ),
     GetPage(
       name: Routes.INVENTORY,
-      page: () => const InventoryPage(),
+      page: () => InventoryPage(),
       binding: InventoryBinding(),
     ),
     GetPage(
       name: Routes.PHONE,
       page: () => PhonesPage(),
+      binding: InventoryBinding(),
+    ),
+    GetPage(
+      name: Routes.PHONE_DETAIL,
+      page: () => const PhoneDetailPage(),
+      binding: InventoryBinding(),
+    ),
+    GetPage(
+      name: Routes.ACCESSORY,
+      page: () => AccessoryPage(),
+      binding: InventoryBinding(),
+    ),
+    GetPage(
+      name: Routes.ACCESSORY_DETAIL,
+      page: () => const AccessoryDetailPage(),
+      binding: InventoryBinding(),
     ),
     GetPage(
       name: Routes.ORDER,
-      page: () => const OrdersPage(),
-      // binding: ProductBinding(),
+      page: () => const SalePage(),
+      binding: SaleBinding(),
     ),
     GetPage(
       name: Routes.CUSTOMER,
-      page: () => const CustomersPage(),
-      // binding: ProductBinding(),
+      page: () => CustomersPage(),
+      binding: CustomerBinding(),
     ),
     GetPage(
       name: Routes.SETTING,

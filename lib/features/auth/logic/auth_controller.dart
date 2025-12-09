@@ -1,9 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:phone_management_system_admin/core/routes/app_routes.dart';
 import 'package:phone_management_system_admin/core/services/local_storage_service.dart';
 import 'package:phone_management_system_admin/features/auth/data/auth_repository.dart';
-import 'package:phone_management_system_admin/features/auth/domain/models/user_model.dart';
+import 'package:phone_management_system_admin/features/users/domains/user_model.dart';
+import 'package:phone_management_system_admin/features/auth/services/google_auth_service.dart';
 
 class AuthController extends GetxController {
   AuthController({required this.storage, required this.repository});
@@ -17,6 +19,7 @@ class AuthController extends GetxController {
   final token = RxnString();
 
   final AuthRepository repository;
+  final googleService = GoogleAuthService();
   final LocalStorageService storage;
 
   // --- Text Controllers ---
@@ -90,9 +93,37 @@ class AuthController extends GetxController {
     } catch (e) {
       final msg = e.toString().replaceAll('Exception: ', '');
       Get.snackbar('Login failed', msg, snackPosition: SnackPosition.BOTTOM);
-      print(msg);
+      debugPrint(msg);
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> signInWithGoogle() async {
+    try {
+      final credential = await googleService.signInWithGoogle();
+      final user = credential.user;
+
+      if (user == null) return;
+
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection("users")
+          .doc(user.uid)
+          .get();
+
+      if (!userDoc.exists) {
+        // New user → go fill profile
+        Get.offAllNamed('/complete-profile', arguments: {
+          "email": user.email,
+          "photo": user.photoURL,
+          "uid": user.uid,
+        });
+      } else {
+        // Existing user → go to home
+        Get.offAllNamed('/dashboard');
+      }
+    } catch (e) {
+      Get.snackbar("Error", e.toString());
     }
   }
 

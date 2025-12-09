@@ -122,26 +122,28 @@ Widget buildPhoneInfoCard(
           SizedBox(
             width: AppSize.width,
             child: Column(
-              children: (p.variants ?? []).map((v) {
-                return ListTile(
-                  title: ReusableText(
-                    text: '${v.storage ?? ''} GB • Color: ${v.color ?? ''}'
-                        .trim(),
-                    style: appStyle(14, AppColors.kDark, FontWeight.w500),
-                  ),
-                  subtitle: ReusableText(
-                    text:
-                        'Stock: ${v.stock ?? 0} • Price: ${v.pricing?.sellingPrice ?? '-'}',
-                    style: appStyle(12, AppColors.kPrimary, FontWeight.w400),
-                  ),
-                  trailing: IconButton(
-                      icon: const Icon(Icons.edit),
-                      onPressed: () {
-                        Get.toNamed('/phones/variant/edit',
-                            arguments: {'phoneId': p.id, 'variant': v});
-                      }),
-                );
-              }).toList(),
+              children: (p.variants ?? []).map(
+                (v) {
+                  return ListTile(
+                    title: ReusableText(
+                      text: '${v.storage ?? ''} GB • Color: ${v.color ?? ''}'
+                          .trim(),
+                      style: appStyle(14, AppColors.kDark, FontWeight.w500),
+                    ),
+                    subtitle: ReusableText(
+                      text:
+                          'Stock: ${v.stock ?? 0} • Price: ${v.pricing?.sellingPrice ?? '-'}',
+                      style: appStyle(12, AppColors.kPrimary, FontWeight.w400),
+                    ),
+                    trailing: IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () {
+                          Get.toNamed('/phones/variant/edit',
+                              arguments: {'phoneId': p.id, 'variant': v});
+                        }),
+                  );
+                },
+              ).toList(),
             ),
           ),
           SizedBox(height: 20.h),
@@ -149,37 +151,4 @@ Widget buildPhoneInfoCard(
       ),
     ),
   );
-}
-
-void _onEdit(Phone p) {
-  Get.toNamed('/phones/edit', arguments: p);
-}
-
-Future<void> _onDelete(Phone p, PhoneController phoneCtrl) async {
-  final confirmed = await Get.dialog<bool>(
-    AlertDialog(
-      title: const Text('Delete phone'),
-      content: Text('Delete "${p.brand} ${p.model}"?'),
-      actions: [
-        TextButton(
-          onPressed: () => Get.back(result: false),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () => Get.back(result: true),
-          child: const Text('Delete'),
-        ),
-      ],
-    ),
-  );
-
-  if (confirmed != true) return;
-
-  try {
-    await phoneCtrl.deletePhone(p.id ?? '');
-    Get.back(); // pop detail
-    Get.snackbar('Deleted', 'Phone deleted');
-  } catch (e) {
-    Get.snackbar('Error', 'Delete failed: $e');
-  }
 }

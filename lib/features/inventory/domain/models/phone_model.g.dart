@@ -22,13 +22,16 @@ Phone _$PhoneFromJson(Map<String, dynamic> json) => Phone(
       category: json['category'] as String?,
       supplier: json['supplier'] as String?,
       stock: (json['stock'] as num?)?.toInt() ?? 0,
-      lowStockThreshold: (json['lowStockThreshold'] as num?)?.toInt() ?? 5,
+      lowStockThreshold: (json['lowStockThreshold'] as num?)?.toInt() ?? 0,
       images:
           (json['images'] as List<dynamic>?)?.map((e) => e as String).toList(),
       sku: json['sku'] as String?,
       isActive: json['isActive'] as bool? ?? true,
       restockHistory: (json['restockHistory'] as List<dynamic>?)
           ?.map((e) => RestockHistory.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      saleHistory: (json['saleHistory'] as List<dynamic>?)
+          ?.map((e) => SaleHistory.fromJson(e as Map<String, dynamic>))
           .toList(),
       createdAt: json['createdAt'] == null
           ? null
@@ -56,6 +59,7 @@ Map<String, dynamic> _$PhoneToJson(Phone instance) => <String, dynamic>{
       'isActive': instance.isActive,
       'restockHistory':
           instance.restockHistory?.map((e) => e.toJson()).toList(),
+      'saleHistory': instance.saleHistory?.map((e) => e.toJson()).toList(),
       'createdAt': instance.createdAt?.toIso8601String(),
       'updatedAt': instance.updatedAt?.toIso8601String(),
     };
@@ -71,7 +75,7 @@ Map<String, dynamic> _$PricingToJson(Pricing instance) => <String, dynamic>{
     };
 
 Variant _$VariantFromJson(Map<String, dynamic> json) => Variant(
-      id: json['id'] as String?,
+      id: json['_id'] as String?,
       storage: json['storage'] as String?,
       color: json['color'] as String?,
       condition: PhoneConditionX.fromBackend(json['condition'] as String?),
@@ -83,7 +87,7 @@ Variant _$VariantFromJson(Map<String, dynamic> json) => Variant(
     );
 
 Map<String, dynamic> _$VariantToJson(Variant instance) => <String, dynamic>{
-      'id': instance.id,
+      '_id': instance.id,
       'storage': instance.storage,
       'color': instance.color,
       'condition': Variant._conditionToJson(instance.condition),
@@ -160,4 +164,22 @@ Map<String, dynamic> _$RestockHistoryToJson(RestockHistory instance) =>
       'quantity': instance.quantity,
       'note': instance.note,
       'supplier': instance.supplier,
+    };
+
+SaleHistory _$SaleHistoryFromJson(Map<String, dynamic> json) => SaleHistory(
+      date:
+          json['date'] == null ? null : DateTime.parse(json['date'] as String),
+      quantity: (json['quantity'] as num?)?.toInt(),
+      soldPrice: (json['soldPrice'] as num?)?.toDouble(),
+      handledBy: json['handledBy'] as String?,
+      customer: json['customer'] as String?,
+    );
+
+Map<String, dynamic> _$SaleHistoryToJson(SaleHistory instance) =>
+    <String, dynamic>{
+      'date': instance.date?.toIso8601String(),
+      'quantity': instance.quantity,
+      'soldPrice': instance.soldPrice,
+      'handledBy': instance.handledBy,
+      'customer': instance.customer,
     };

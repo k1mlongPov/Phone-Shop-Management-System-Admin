@@ -2,9 +2,6 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:phone_management_system_admin/features/inventory/domain/enums/phone_condition.dart';
 part 'phone_model.g.dart';
 
-/// ------------------------------------------------------
-/// PHONE MODEL
-/// ------------------------------------------------------
 @JsonSerializable(explicitToJson: true)
 class Phone {
   final String? id;
@@ -29,6 +26,7 @@ class Phone {
   final bool isActive;
 
   final List<RestockHistory>? restockHistory;
+  final List<SaleHistory>? saleHistory;
 
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -50,6 +48,7 @@ class Phone {
     this.sku,
     this.isActive = true,
     this.restockHistory,
+    this.saleHistory,
     this.createdAt,
     this.updatedAt,
   });
@@ -85,6 +84,7 @@ class Phone {
     String? sku,
     bool? isActive,
     List<RestockHistory>? restockHistory,
+    List<SaleHistory>? saleHistory,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -105,6 +105,7 @@ class Phone {
       sku: sku ?? this.sku,
       isActive: isActive ?? this.isActive,
       restockHistory: restockHistory ?? this.restockHistory,
+      saleHistory: saleHistory ?? this.saleHistory,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -138,11 +139,11 @@ class Pricing {
 /// ------------------------------------------------------
 @JsonSerializable(explicitToJson: true)
 class Variant {
+  @JsonKey(name: '_id')
   final String? id;
   final String? storage;
   final String? color;
 
-  /// NEW: Phone condition
   @JsonKey(fromJson: PhoneConditionX.fromBackend, toJson: _conditionToJson)
   final PhoneCondition condition;
 
@@ -282,4 +283,26 @@ class RestockHistory {
       _$RestockHistoryFromJson(json);
 
   Map<String, dynamic> toJson() => _$RestockHistoryToJson(this);
+}
+
+@JsonSerializable()
+class SaleHistory {
+  final DateTime? date;
+  final int? quantity;
+  final double? soldPrice;
+  final String? handledBy;
+  final String? customer;
+
+  SaleHistory({
+    this.date,
+    this.quantity,
+    this.soldPrice,
+    this.handledBy,
+    this.customer,
+  });
+
+  factory SaleHistory.fromJson(Map<String, dynamic> json) =>
+      _$SaleHistoryFromJson(json);
+
+  Map<String, dynamic> toJson() => _$SaleHistoryToJson(this);
 }

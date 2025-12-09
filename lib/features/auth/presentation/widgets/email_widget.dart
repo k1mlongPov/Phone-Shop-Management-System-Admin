@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:phone_management_system_admin/core/theme/app_colors.dart';
+import 'package:phone_management_system_admin/shared/constants/app_size.dart';
 import 'package:phone_management_system_admin/shared/styles/app_style.dart';
 import 'package:phone_management_system_admin/shared/widgets/custom_button.dart';
 import 'package:phone_management_system_admin/shared/widgets/custom_text_field.dart';
@@ -37,9 +38,14 @@ class _EmailWidgetState extends State<EmailWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ReusableText(
-              text: 'Sign in with your email and password',
-              style: appStyle(14, AppColors.kDark, FontWeight.normal),
+            SizedBox(
+              width: AppSize.width,
+              child: Center(
+                child: ReusableText(
+                  text: 'Sign in with your email and password',
+                  style: appStyle(14, AppColors.kDark, FontWeight.normal),
+                ),
+              ),
             ),
             SizedBox(height: 20.h),
             CustomTextField(
@@ -96,9 +102,7 @@ class _EmailWidgetState extends State<EmailWidget> {
                     FontWeight.normal,
                   ),
                 ),
-                onTap: () {
-                  // TODO: navigate to forgot password page
-                },
+                onTap: () {},
               ),
             ),
             SizedBox(height: 10.h),
@@ -118,59 +122,6 @@ class _EmailWidgetState extends State<EmailWidget> {
               );
             }),
             SizedBox(height: 20.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                    width: MediaQuery.of(context).size.width * 0.35,
-                    height: 1.h,
-                    color: AppColors.kDark),
-                ReusableText(
-                  text: 'OR',
-                  style: appStyle(14, AppColors.kDark, FontWeight.normal),
-                ),
-                Container(
-                    width: MediaQuery.of(context).size.width * 0.35,
-                    height: 1.h,
-                    color: AppColors.kDark),
-              ],
-            ),
-            SizedBox(height: 20.h),
-            CustomButton(
-              text: 'Sign in with Google',
-              btnHeight: 40.h,
-              btnBorderWidth: 1,
-              btnColor: AppColors.kWhite,
-              textColor: AppColors.kDark,
-              hasIcon: true,
-              imagePath: 'assets/icons/google.png',
-              onTap: () {
-                // TODO: implement Google Sign-In, then call auth.fetchCurrentUser()
-              },
-            ),
-            BottomAppBar(
-              color: AppColors.kWhite,
-              elevation: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ReusableText(
-                    text: "Don't have an account? ",
-                    style: appStyle(14, AppColors.kDark, FontWeight.normal),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Get.toNamed('/register');
-                      auth.clearLoginFields();
-                    },
-                    child: ReusableText(
-                      text: 'Sign up',
-                      style: appStyle(14, AppColors.kPrimary, FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),

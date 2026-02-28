@@ -43,9 +43,9 @@ class DashboardPage extends StatelessWidget {
                     slivers: [
                       SliverToBoxAdapter(child: dashboardHeader(c)),
                       SliverToBoxAdapter(child: SizedBox(height: 16.h)),
-                      SliverToBoxAdapter(child: topSellingSection(c)),
-                      SliverToBoxAdapter(child: SizedBox(height: 16.h)),
                       SliverToBoxAdapter(child: dashboardSummaryRow(c)),
+                      SliverToBoxAdapter(child: SizedBox(height: 16.h)),
+                      SliverToBoxAdapter(child: topSellingSection(c)),
                       SliverToBoxAdapter(child: SizedBox(height: 16.h)),
                       SliverToBoxAdapter(child: salesChartSection(c)),
                       SliverToBoxAdapter(child: SizedBox(height: 16.h)),

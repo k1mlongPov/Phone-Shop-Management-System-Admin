@@ -44,9 +44,12 @@ class _SalePageState extends State<SalePage> {
         actions: [
           GestureDetector(
             onTap: () => Get.to(() => InvoiceHistoryPage()),
-            child: ReusableText(
-              text: 'See invoices',
-              style: appStyle(13, AppColors.kWhite, FontWeight.w600),
+            child: Container(
+              margin: EdgeInsets.only(right: 12.w),
+              child: ReusableText(
+                text: 'See invoices',
+                style: appStyle(13, AppColors.kWhite, FontWeight.w600),
+              ),
             ),
           ),
         ],

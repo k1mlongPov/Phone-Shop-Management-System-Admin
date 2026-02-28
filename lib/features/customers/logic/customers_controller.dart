@@ -49,16 +49,10 @@ class CustomersController extends GetxController
     super.onClose();
   }
 
-  // ---------------------------------------------------------------------------
-  // Public refresh
-  // ---------------------------------------------------------------------------
   Future<void> refreshData() async {
     await loadTabData();
   }
 
-  // ---------------------------------------------------------------------------
-  // Load data per tab
-  // ---------------------------------------------------------------------------
   Future<void> loadTabData() async {
     isLoading(true);
     try {
@@ -102,9 +96,6 @@ class CustomersController extends GetxController
     _applyAdminsFilter();
   }
 
-  // ---------------------------------------------------------------------------
-  // Filtering / Search
-  // ---------------------------------------------------------------------------
   void search(String value) {
     searchQuery.value = value.toLowerCase().trim();
 
@@ -166,9 +157,6 @@ class CustomersController extends GetxController
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------------------------
   Customer? findCustomerById(String id) {
     try {
       return customers.firstWhere((c) => c.id == id);
@@ -177,9 +165,6 @@ class CustomersController extends GetxController
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Create customer
-  // ---------------------------------------------------------------------------
   Future<void> createCustomer(Customer model) async {
     isLoading(true);
     try {
@@ -198,9 +183,6 @@ class CustomersController extends GetxController
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Update customer
-  // ---------------------------------------------------------------------------
   Future<void> updateCustomer(String id, Map<String, dynamic> payload) async {
     isLoading(true);
     try {

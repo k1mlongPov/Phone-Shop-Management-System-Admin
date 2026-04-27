@@ -81,7 +81,6 @@ class AuthController extends GetxController {
         password: password.text,
       );
 
-      // Only read tokens — DO NOT SAVE THEM HERE
       final loggedUser = result['user'] as UserModel;
       final accessToken = result['accessToken'] as String;
 

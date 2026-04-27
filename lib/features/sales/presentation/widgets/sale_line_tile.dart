@@ -31,6 +31,10 @@ class SaleLineTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () {
+        if (index >= saleCtrl.items.length) {
+          return const SizedBox();
+        }
+
         final line = saleCtrl.items[index];
 
         return Container(
